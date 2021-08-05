@@ -166,10 +166,11 @@ def valid(val_loader, model):
 
 def main():
 
-    print('flag1')
     transform = transforms.Compose([transforms.ToTensor()])
     train_set = FaceScrub('./face.npz', transform=transform)
     test_set = FaceScrub('./face_test.npz', transform=transform)
+    train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True, pin_memory=True, drop_last=True)
+    val_loader = DataLoader(test_set, batch_size=batch_size, shuffle=False, pin_memory=True, drop_last=True)
 
     # Create SegNet model
     label_nbr = 3
