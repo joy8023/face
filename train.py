@@ -18,18 +18,17 @@ start_epoch = 0
 epochs = 100
 print_freq = 10
 save_folder = 'models'
+device = torch.device("cuda" if use_cuda else "cpu")
 
 def ensure_folder(folder):
     if not os.path.exists(folder):
         os.makedirs(folder)
-
 
 def adjust_learning_rate(optimizer, shrink_factor):
     print("\nDECAYING learning rate.")
     for param_group in optimizer.param_groups:
         param_group['lr'] = param_group['lr'] * shrink_factor
     print("The new learning rate is %f\n" % (optimizer.param_groups[0]['lr'],))
-
 
 class ExpoAverageMeter(object):
     # Exponential Weighted Average Meter
@@ -45,7 +44,6 @@ class ExpoAverageMeter(object):
     def update(self, val):
         self.val = val
         self.avg = self.beta * self.avg + (1 - self.beta) * self.val
-
 
 def save_checkpoint(epoch, model, optimizer, val_loss, is_best):
     ensure_folder(save_folder)
@@ -176,13 +174,13 @@ def main():
     label_nbr = 3
     model = SegNet(label_nbr)
 
-    use_cuda = torch.cuda.is_available()
-    device = torch.device("cuda" if use_cuda else "cpu")
-    print(device)
+    #use_cuda = torch.cuda.is_available()
+    #device = torch.device("cuda" if use_cuda else "cpu")
+    #print(device)
 
     # Use appropriate device
     model = model.to(device)
-    print(model)
+    #print(model)
 
     # define the optimizer
     # optimizer = optim.LBFGS(model.parameters(), lr=0.8)
