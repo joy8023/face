@@ -8,7 +8,6 @@ from torchvision import transforms
 from model import SegNet
 from data import FaceScrub
 
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 input_nbr = 3
 imsize = 112
@@ -175,17 +174,13 @@ def main():
     label_nbr = 3
     model = SegNet(label_nbr)
 
-    use_cuda = not args.no_cuda and torch.cuda.is_available()
+    use_cuda = torch.cuda.is_available()
     device = torch.device("cuda" if use_cuda else "cpu")
-    #xkwargs = {'num_workers': 1 , 'pin_memory': True} if use_cuda else {}
-    
-    #if torch.cuda.device_count() > 1:
-    #    print("Let's use", torch.cuda.device_count(), "GPUs!")
-        # dim = 0 [40, xxx] -> [10, ...], [10, ...], [10, ...], [10, ...] on 4 GPUs
-    #    model = nn.DataParallel(model)
+    print(device)
+
     # Use appropriate device
     model = model.to(device)
-    # print(model)
+    print(model)
 
     # define the optimizer
     # optimizer = optim.LBFGS(model.parameters(), lr=0.8)
@@ -203,6 +198,7 @@ def main():
             adjust_learning_rate(optimizer, 0.8)
 
         # One epoch's training
+        print('training')
         train(epoch, train_loader, model, optimizer)
 
         # One epoch's validation
