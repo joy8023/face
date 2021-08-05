@@ -1,5 +1,6 @@
 import time
 
+import torch
 import torch.optim as optim
 from torch import nn
 from torch.utils.data import DataLoader
