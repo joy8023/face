@@ -18,8 +18,9 @@ class FaceScrub(Dataset):
         np.random.seed(666)
         perm = np.arange(len(data))
         np.random.shuffle(perm)
-        data = data[perm]/255.0
-        labels = labels[perm]
+        self.data = data[perm]/255.0
+        self.labels = labels[perm]
+
 
     def __len__(self):
         return len(self.data)
