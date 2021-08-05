@@ -174,10 +174,15 @@ def main():
     # Create SegNet model
     label_nbr = 3
     model = SegNet(label_nbr)
-    if torch.cuda.device_count() > 1:
-        print("Let's use", torch.cuda.device_count(), "GPUs!")
+
+    use_cuda = not args.no_cuda and torch.cuda.is_available()
+    device = torch.device("cuda" if use_cuda else "cpu")
+    #xkwargs = {'num_workers': 1 , 'pin_memory': True} if use_cuda else {}
+    
+    #if torch.cuda.device_count() > 1:
+    #    print("Let's use", torch.cuda.device_count(), "GPUs!")
         # dim = 0 [40, xxx] -> [10, ...], [10, ...], [10, ...], [10, ...] on 4 GPUs
-        model = nn.DataParallel(model)
+    #    model = nn.DataParallel(model)
     # Use appropriate device
     model = model.to(device)
     # print(model)
