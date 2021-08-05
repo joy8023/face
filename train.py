@@ -5,13 +5,15 @@ import torch.optim as optim
 from torch import nn
 from torch.utils.data import DataLoader
 from torchvision import transforms
+import torchvision.utils as vutils
+
 from model import SegNet
 from data import FaceScrub
 import os, shutil
 
 input_nbr = 3
 imsize = 112
-batch_size = 128
+batch_size = 64
 lr = 0.0001
 patience = 50
 start_epoch = 0
@@ -93,14 +95,6 @@ def train(epoch, train_loader, model, optimizer):
 
         start = time.time()
 
-        truth = y[0:32]
-        inverse = y_hat[0:32]
-        out = torch.cat((inverse, truth))
-        for i in range(4):
-            out[i * 16:i * 16 + 8] = inverse[i * 8:i * 8 + 8]
-            out[i * 16 + 8:i * 16 + 16] = truth[i * 8:i * 8 + 8]
-        vutils.save_image(out, 'out/recon_{}_{}.png'.format(msg.replace(" ", ""), epoch), normalize=False)
-
         # Print status
         if i_batch % print_freq == 0:
             print('Epoch: [{0}][{1}/{2}]\t'
@@ -123,6 +117,7 @@ def valid(val_loader, model):
     start = time.time()
     plot = True
     ensure_folder('out')
+    msg = 'val'
 
     with torch.no_grad():
         # Batches
@@ -149,8 +144,8 @@ def valid(val_loader, model):
                                                                       batch_time=batch_time,
                                                                       loss=losses))
             if plot:
-                truth = data[0:32]
-                inverse = reconstruction[0:32]
+                truth = y[0:32]
+                inverse = y_hat[0:32]
                 out = torch.cat((inverse, truth))
                 for i in range(4):
                     out[i * 16:i * 16 + 8] = inverse[i * 8:i * 8 + 8]
