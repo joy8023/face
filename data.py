@@ -8,14 +8,13 @@ class FaceScrub(Dataset):
     def __init__(self, path, transform=None):
         self.root = os.path.expanduser(path)
         self.transform = transform
-        self.target_transform = target_transform
 
         input = np.load(path)
 
         data = input['images']
         labels = input['labels']
 
-        print(data.shape)
+        #print(data.shape)
         np.random.seed(666)
         perm = np.arange(len(data))
         np.random.shuffle(perm)

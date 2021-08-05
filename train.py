@@ -17,7 +17,7 @@ batch_size = 64
 lr = 0.0001
 patience = 50
 start_epoch = 0
-epochs = 100
+epochs = 50
 print_freq = 10
 save_folder = 'models'
 use_cuda = torch.cuda.is_available()
@@ -52,11 +52,13 @@ def save_checkpoint(epoch, model, optimizer, val_loss, is_best):
     ensure_folder(save_folder)
     state = {'model': model,
              'optimizer': optimizer}
-    filename = '{0}/checkpoint_{1}_{2:.3f}.tar'.format(save_folder, epoch, val_loss)
-    torch.save(state, filename)
+    #filename = '{0}/checkpoint_{1}_{2:.3f}.tar'.format(save_folder, epoch, val_loss)
+    #torch.save(state, filename)
+
+    torch.save(model.state_dict(), '{0}/train_{1}_{2:.3f}.pth'.format(save_folder, epoch, val_loss ))
     # If this checkpoint is the best so far, store a copy so it doesn't get overwritten by a worse checkpoint
     if is_best:
-        torch.save(state, '{}/BEST_checkpoint.tar'.format(save_folder))
+        torch.save(model.state_dict(), '{0}/best_model.pth'.format(save_folder))
 
 
 def train(epoch, train_loader, model, optimizer):
@@ -102,7 +104,6 @@ def train(epoch, train_loader, model, optimizer):
                   'Loss {loss.val:.4f} ({loss.avg:.4f})\t'.format(epoch, i_batch, len(train_loader),
                                                                   batch_time=batch_time,
                                                                   loss=losses))
-        return
 
 
 def valid(val_loader, model, epoch):
