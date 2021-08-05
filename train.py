@@ -18,6 +18,7 @@ start_epoch = 0
 epochs = 100
 print_freq = 10
 save_folder = 'models'
+use_cuda = torch.cuda.is_available()
 device = torch.device("cuda" if use_cuda else "cpu")
 
 def ensure_folder(folder):
@@ -71,8 +72,8 @@ def train(epoch, train_loader, model, optimizer):
     # Batches
     for i_batch, (x, y) in enumerate(train_loader):
         # Set device options
-        x = x.to(device)
-        y = y.to(device)
+        x = x.to(device, dtype=torch.float)
+        y = y.to(device, dtype=torch.float)
 
         # print('x.size(): ' + str(x.size())) # [32, 3, 224, 224]
         # print('y.size(): ' + str(y.size())) # [32, 3, 224, 224]
@@ -129,8 +130,8 @@ def valid(val_loader, model):
         # Batches
         for i_batch, (x, y) in enumerate(val_loader):
             # Set device options
-            x = x.to(device)
-            y = y.to(device)
+            x = x.to(device, dtype=torch.float)
+            y = y.to(device, dtype=torch.float)
 
             y_hat = model(x)
 
@@ -173,10 +174,6 @@ def main():
     # Create SegNet model
     label_nbr = 3
     model = SegNet(label_nbr)
-
-    #use_cuda = torch.cuda.is_available()
-    #device = torch.device("cuda" if use_cuda else "cpu")
-    #print(device)
 
     # Use appropriate device
     model = model.to(device)
