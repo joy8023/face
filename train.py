@@ -105,7 +105,7 @@ def train(epoch, train_loader, model, optimizer):
         return
 
 
-def valid(val_loader, model):
+def valid(val_loader, model, epoch):
     model.eval()  # eval mode (no dropout or batchnorm)
 
     # Loss function
@@ -191,7 +191,7 @@ def main():
         train(epoch, train_loader, model, optimizer)
 
         # One epoch's validation
-        val_loss = valid(val_loader, model)
+        val_loss = valid(val_loader, model, epoch)
         print('\n * LOSS - {loss:.3f}\n'.format(loss=val_loss))
 
         # Check if there was an improvement
