@@ -166,6 +166,7 @@ def valid(val_loader, model):
 
 def main():
 
+    print('flag1')
     transform = transforms.Compose([transforms.ToTensor()])
     train_set = FaceScrub('./face.npz', transform=transform)
     test_set = FaceScrub('./face_test.npz', transform=transform)
