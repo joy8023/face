@@ -7,11 +7,11 @@ from torch.utils.data import DataLoader
 from torchvision import transforms
 from model import SegNet
 from data import FaceScrub
-
+import os, shutil
 
 input_nbr = 3
 imsize = 112
-batch_size = 32
+batch_size = 128
 lr = 0.0001
 patience = 50
 start_epoch = 0
@@ -75,9 +75,6 @@ def train(epoch, train_loader, model, optimizer):
         x = x.to(device, dtype=torch.float)
         y = y.to(device, dtype=torch.float)
 
-        # print('x.size(): ' + str(x.size())) # [32, 3, 224, 224]
-        # print('y.size(): ' + str(y.size())) # [32, 3, 224, 224]
-
         # Zero gradients
         optimizer.zero_grad()
 
@@ -86,14 +83,6 @@ def train(epoch, train_loader, model, optimizer):
 
         loss = torch.sqrt((y_hat - y).pow(2).mean())
         loss.backward()
-
-        # def closure():
-        #     optimizer.zero_grad()
-        #     y_hat = model(x)
-        #     loss = torch.sqrt((y_hat - y).pow(2).mean())
-        #     loss.backward()
-        #     losses.update(loss.item())
-        #     return loss
 
         # optimizer.step(closure)
         optimizer.step()
@@ -104,6 +93,14 @@ def train(epoch, train_loader, model, optimizer):
 
         start = time.time()
 
+        truth = y[0:32]
+        inverse = y_hat[0:32]
+        out = torch.cat((inverse, truth))
+        for i in range(4):
+            out[i * 16:i * 16 + 8] = inverse[i * 8:i * 8 + 8]
+            out[i * 16 + 8:i * 16 + 16] = truth[i * 8:i * 8 + 8]
+        vutils.save_image(out, 'out/recon_{}_{}.png'.format(msg.replace(" ", ""), epoch), normalize=False)
+
         # Print status
         if i_batch % print_freq == 0:
             print('Epoch: [{0}][{1}/{2}]\t'
@@ -111,6 +108,7 @@ def train(epoch, train_loader, model, optimizer):
                   'Loss {loss.val:.4f} ({loss.avg:.4f})\t'.format(epoch, i_batch, len(train_loader),
                                                                   batch_time=batch_time,
                                                                   loss=losses))
+        return
 
 
 def valid(val_loader, model):
@@ -177,7 +175,6 @@ def main():
 
     # Use appropriate device
     model = model.to(device)
-    #print(model)
 
     # define the optimizer
     # optimizer = optim.LBFGS(model.parameters(), lr=0.8)
