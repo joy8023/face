@@ -1,0 +1,11 @@
+#!/bin/bash
+
+for (( i=2; i<21; i=i+1 )); do
+    #generate fawkes images
+    #python fawkes/protection.py --gpu 0 -d faces/$i -m high --no-align
+
+    #generate dataset with original images and fawkes images
+    python dataset.py -d faces/$i
+
+
+done
