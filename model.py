@@ -171,8 +171,6 @@ class SegNet(nn.Module):
                 l2.bias.data = l1.bias.data
 
 
-
-
 class Classifier(nn.Module):
     def __init__(self, nc, ndf, nz):
         super(Classifier, self).__init__()

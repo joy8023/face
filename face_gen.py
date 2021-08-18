@@ -1,3 +1,5 @@
+#for generating the dataset from the original images files
+import time
 import numpy as np
 import os
 from PIL import Image
@@ -64,6 +66,9 @@ def face(path):
 		np.savez("face.npz", images = images, labels = labels, names = names)
 		np.savez("face_test.npz", images = test_images, labels = test_labels, names = names)
 
+
+train_size = 30000
+test_size = 10000
 #generate CelebA dataset
 def celeb(path):
 
@@ -71,49 +76,46 @@ def celeb(path):
 		print("no such directory")
 		return
 
-	images = []
+	train = []
+	test = []
 	C = 0
 
 	with os.scandir(path) as files:
 		
 		for file in files:
-			if os.path.splitext(file)[1] == '.jpg' and C < 50000:
-				img = cv2.imread(os.path.join(file), cv2.IMREAD_GRAYSCALE)
+			if os.path.splitext(file)[1] == '.jpg':
+				img = Image.open(os.path.join(file))
 				#print(img.shape)
-				img = cv2.resize(img[70:178,35:143],(64,64))
-				#cv2.imshow("img",img)
-				#cv2.waitKey(0)
-				images.append(img)
+				img = img.crop((35,70,143,178))
+				#img = cv2.resize(img[70:178,35:143],(112,112))
+				img = img.resize((112,112))
+				img = img.convert('RGB')
+				#img.show()
+				#img.close()
+				#time.sleep(5)
+				img = np.asarray(img)
+				if C < train_size:
+					train.append(img)
+				else:
+					test.append(img)
 				C += 1
-	
-	images = np.array(images)
-	#images = images / 255.0
 
-	print(images.shape)
-	#print(images.max())
-	np.save("celeba_5w_255.npy", images)
+			if C % 500 == 0:
+				print("already read {} pictures".format(C))
 
+			if C == train_size + test_size:
+				break
 
+	train = np.array(train)
+	test = np.array(test)
 
-#celeb("./celeba")
-face("./faces")
+	print(train.shape)
+	print(test.shape)
+	np.save("celeba_3w.npy", train)
+	np.save("celeba_1w.npy", test)
 
-'''
-input = np.load("./facescrub.npz")
-#print(input)
-data = input['images']
-print(data.max())
-data= data/255.0
-print(data[0])
-'''
-#labels = input['labels']
-#names = input['names']
-#print(labels)
-#one = np.where(labels == 2)
-#print(one)
-#one_hot = np.eye(len(names))[labels]
-
-#np.savez("facescrub.npz", images = data, labels = one_hot, names = names)
+celeb("./celeba")
+#face("./faces")
 
 
 

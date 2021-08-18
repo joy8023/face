@@ -8,7 +8,7 @@ from torchvision import transforms
 import torchvision.utils as vutils
 
 from model import SegNet
-from data import FaceScrub
+from data import FaceScrub, Celeb
 import os, shutil
 
 input_nbr = 3
@@ -160,8 +160,10 @@ def valid(val_loader, model, epoch):
 def main():
 
     transform = transforms.Compose([transforms.ToTensor()])
-    train_set = FaceScrub('./face.npz', transform=transform)
-    test_set = FaceScrub('./face_test.npz', transform=transform)
+    #train_set = FaceScrub('./face.npz', transform=transform)
+    #test_set = FaceScrub('./face_test.npz', transform=transform)
+    train_set = Celeb('./data/celeba_3w.npy', transform = transform)
+    test_set = Celeb('./data/celeba_1w.npy', transform = transform)
     train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True, pin_memory=True, drop_last=True)
     val_loader = DataLoader(test_set, batch_size=batch_size, shuffle=False, pin_memory=True, drop_last=True)
 

@@ -1,3 +1,5 @@
+#dataset to train the autoencoder
+
 from __future__ import print_function, division
 import os
 import numpy as np
@@ -34,3 +36,31 @@ class FaceScrub(Dataset):
             target = self.transform(target)
 
         return img, target
+
+class Celeb(Dataset):
+    def __init__(self, path, transform=None):
+        self.root = os.path.expanduser(path)
+        self.transform = transform
+
+        data = np.load(path)
+
+        #print(data.shape)
+        np.random.seed(666)
+        perm = np.arange(len(data))
+        np.random.shuffle(perm)
+        self.data = data[perm]/255.0
+
+    def __len__(self):
+        return len(self.data)
+
+    def __getitem__(self, index):
+        #img, target = self.data[index], self.labels[index]
+        img, target = self.data[index], self.data[index]
+        #img = Image.fromarray(img)
+
+        if self.transform is not None:
+            img = self.transform(img)
+            target = self.transform(target)
+
+        return img, target
+
