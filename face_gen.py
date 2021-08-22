@@ -44,9 +44,6 @@ def face(path):
 							test_labels.append(C)
 
 						counter += 1
-						#test = Image.fromarray(img,'RGB')
-						#test.save('test.jpeg')
-						#return
 
 				names.append(actor.name)
 				C += 1
