@@ -15,24 +15,10 @@ import os, shutil
 input_nbr = 3
 imsize = 112
 batch_size = 64
-lr = 0.0001
-patience = 50
-start_epoch = 0
-epochs = 50
 print_freq = 10
 save_folder = 'models'
 use_cuda = torch.cuda.is_available()
 device = torch.device("cuda" if use_cuda else "cpu")
-
-def ensure_folder(folder):
-    if not os.path.exists(folder):
-        os.makedirs(folder)
-
-def adjust_learning_rate(optimizer, shrink_factor):
-    print("\nDECAYING learning rate.")
-    for param_group in optimizer.param_groups:
-        param_group['lr'] = param_group['lr'] * shrink_factor
-    print("The new learning rate is %f\n" % (optimizer.param_groups[0]['lr'],))
 
 class ExpoAverageMeter(object):
     # Exponential Weighted Average Meter
@@ -65,6 +51,7 @@ def load_model(model, path):
     try:
         checkpoint = torch.load(path)
         model.load_state_dict(checkpoint)
+        return model
     except:
         print("=> load classifier checkpoint '{}' failed".format(path))
         
@@ -146,9 +133,11 @@ def main():
     recon_set = Fawkes('./fawkes/faces/fawkes.npz', transform = transform)
     data_loader = DataLoader(recon_set, batch_size=batch_size, shuffle=False, pin_memory=True, drop_last=True)
 
+    path = 'models/best_model.pth'
     # Create SegNet model
     label_nbr = 3
     model = SegNet(label_nbr)
+    model = load_model(path)
 
     # Use appropriate device
     model = model.to(device)
