@@ -40,12 +40,22 @@ def load_data(datapath):
     labels = data['labels']
     return images, fawkes, labels
 
-def save_feature(datapath, save_path, model):
-    images, fawkes, labels = load_data(datapath)
+def save_feature(datapath, model):
+    images, fawkes, labels = load_data(datapath+'/fawkes.npz')
     image_features = model.predict(images)
     fawkes_features = model.predict(fawkes)
     print(image_features.shape)
-    np.savez(save_path, images = image_features, fawkes = fawkes_features, labels = labels)
+    np.savez(datapath+ '/fawkes_feature.npz', images = image_features, fawkes = fawkes_features, labels = labels)
+    print('done!')
+
+#save feature for recovered images
+def save_feature2(datapath, model):
+    images, fawkes, labels = load_data(datapath+'/fawkes.npz')
+    recon = np.load(datapath +'/fawkes_recon.npy')
+    image_features = model.predict(images)
+    fawkes_features = model.predict(recon)
+    print(fawkes_features.shape)
+    np.savez(datapath+'/recon_feature.npz', images = image_features, fawkes = fawkes_features, labels = labels)
     print('done!')
 
 
@@ -88,7 +98,7 @@ def to_array(l):
     print(a.shape)
     return a
 
-#save single file for one person images
+#save into a single file for one person's original images and cloaked images
 def save_dataset(image_paths, save_path):
     print("Identify {} files in the directory".format(len(image_paths)))
     new_image_paths = []
@@ -148,7 +158,7 @@ def main(*argv):
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--directory', '-d', type=str,
-                        help='the directory that contains images', default='imgs/')
+                        help='the directory that contains images', default='./faces')
     parser.add_argument('--model_name', '-mn', type=str,
                         help='Extractor,0 or 2', default='extractor_0')
     args = parser.parse_args(argv[1:])
@@ -160,7 +170,8 @@ def main(*argv):
 
     #combine(args.directory)
     model = load_extractor(args.model_name)
-    save_feature(args.directory+'/fawkes.npz', args.directory +'/fawkes_feature.npz', model)
+    #save_feature(args.directory, model)
+    save_feature2(args.directory, model)
 
 if __name__ == '__main__':
     main(*sys.argv)

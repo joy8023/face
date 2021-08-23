@@ -76,9 +76,9 @@ class Feature(object):
         image_test = np.copy(self.image_test)
         idx_test = np.where(self.label_test == user)
         
-        image_test[idx_test] = self.fawkes[idx_test]
+        #image_test[idx_test] = self.fawkes[idx_test]
 
-        return image_train,image_test, idx_train, idx_test
+        return image_train, image_test, idx_train, idx_test
 
 #filt the data out(for specific user)
 def filt_user(image, label, idx):
@@ -105,6 +105,8 @@ def recognition(feature, mode = 0):
     test_clean = 0
     train_user = 0
     test_user = 0
+
+
 
     #train and test model for each user
     for user in range(num_class):

@@ -64,7 +64,7 @@ class Celeb(Dataset):
 
         return img, target
 
- class Fawkes(Dataset):
+class Fawkes(Dataset):
     def __init__(self, path, transform=None):
         #self.root = os.path.expanduser(path)
         self.path = path
