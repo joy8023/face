@@ -41,21 +41,22 @@ def load_data(datapath):
     return images, fawkes, labels
 
 def save_feature(datapath, model):
-    images, fawkes, labels = load_data(datapath+'/fawkes.npz')
+    images, fawkes, labels = load_data(datapath)
     image_features = model.predict(images)
     fawkes_features = model.predict(fawkes)
     print(image_features.shape)
-    np.savez(datapath+ '/fawkes_feature.npz', images = image_features, fawkes = fawkes_features, labels = labels)
+    np.savez(datapath[:-4]+'_feature.npz', images = image_features, fawkes = fawkes_features, labels = labels)
     print('done!')
 
 #save feature for recovered images
-def save_feature2(datapath, model):
-    images, fawkes, labels = load_data(datapath+'/fawkes.npz')
-    recon = np.load(datapath +'/fawkes_recon.npy')
+def save_feature2(datapath,reconpath, model):
+    images, fawkes, labels = load_data(datapath)
+    #recon = np.load(datapath[:-4]+'_recon.npy')
+    recon = np.load(reconpath)
     image_features = model.predict(images)
     fawkes_features = model.predict(recon)
     print(fawkes_features.shape)
-    np.savez(datapath+'/recon_feature.npz', images = image_features, fawkes = fawkes_features, labels = labels)
+    np.savez(reconpath[:-4]+'_f.npz', images = image_features, fawkes = fawkes_features, labels = labels)
     print('done!')
 
 
@@ -159,6 +160,8 @@ def main(*argv):
     parser = argparse.ArgumentParser()
     parser.add_argument('--directory', '-d', type=str,
                         help='the directory that contains images', default='./faces')
+    parser.add_argument('--reconpath', '-recon', type = str,
+                        default=None)
     parser.add_argument('--model_name', '-mn', type=str,
                         help='Extractor,0 or 2', default='extractor_0')
     args = parser.parse_args(argv[1:])
@@ -171,7 +174,9 @@ def main(*argv):
     #combine(args.directory)
     model = load_extractor(args.model_name)
     #save_feature(args.directory, model)
-    save_feature2(args.directory, model)
+    if args.reconpath == None:
+        args.reconpath = args.directory + '_recon.npy'
+    save_feature2(args.directory, args.reconpath, model)
 
 if __name__ == '__main__':
     main(*sys.argv)

@@ -1,4 +1,6 @@
 import time
+import sys
+import argparse
 
 import torch
 from torch import nn
@@ -7,7 +9,7 @@ from torchvision import transforms
 import torchvision.utils as vutils
 import torch.nn.functional as F
 
-from model import SegNet
+from model import SegNet, REDNet20
 from data import Fawkes
 import numpy as np
 
@@ -61,7 +63,7 @@ def recon(data_loader, model):
 
     start = time.time()
     plot = True
-    msg = 'recon'
+    msg = 'rednet'
 
     with torch.no_grad():
         # Batches
@@ -73,8 +75,8 @@ def recon(data_loader, model):
             recon = model(x)
 
             loss = torch.sqrt((recon - y).pow(2).mean())
-            recover_loss += F.mse_loss(recon, x, reduction='sum').item()
-            cloak_loss += F.mse_loss(y, x, reduction='sum').item()
+            recover_loss += F.mse_loss(recon, y, reduction='sum').item()
+            cloak_loss += F.mse_loss(x, y, reduction='sum').item()
 
             # Keep track of metrics
             losses.update(loss.item())
@@ -90,12 +92,18 @@ def recon(data_loader, model):
                                                                       batch_time=batch_time,
                                                                       loss=losses))
             if plot:
-                truth = y[0:32]
-                inverse = recon[0:32]
-                out = torch.cat((inverse, truth))
-                for i in range(4):
-                    out[i * 16:i * 16 + 8] = inverse[i * 8:i * 8 + 8]
-                    out[i * 16 + 8:i * 16 + 16] = truth[i * 8:i * 8 + 8]
+                fawkes = x[0:16]
+                recon = recon[0:16]
+                fawkes_diff = (fawkes - y[0:16])*10
+                recon_diff = (recon - y[0:16])*10
+                out = torch.cat((fawkes, recon, fawkes_diff, recon_diff))
+
+                for i in range(2):
+                    out[i * 32:i * 32 + 8] = fawkes[i * 8:i * 8 + 8]
+                    out[i * 32 + 8:i * 32 + 16] = recon[i * 8:i * 8 + 8]
+                    out[i * 32 + 16:i * 32 + 24] = fawkes_diff[i * 8:i * 8 + 8]
+                    out[i * 32 + 24:i * 32 + 32] = recon_diff[i * 8:i * 8 + 8]
+
                 vutils.save_image(out, 'out/recon_{}.png'.format(msg.replace(" ", "")), normalize=False)
                 plot = False
 
@@ -111,23 +119,35 @@ def recon(data_loader, model):
     return recon_img
 
 
-def main():
+def main(*argv):
+
+    if not argv:
+        argv = list(sys.argv)
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--model', '-m', type=str,
+                        help='the path of model', default='models/best_model.pth')
+    parser.add_argument('--data', '-d', type=str,
+                        help='the path of data set', default= 'fawkes/faces/fawkes.npz')
+    args = parser.parse_args(argv[1:])
+
 
     transform = transforms.Compose([transforms.ToTensor()])
-    data_set = Fawkes('./fawkes/faces/', transform = transform)
+    data_set = Fawkes(args.data, transform = transform)
     data_loader = DataLoader(data_set, batch_size=batch_size, shuffle=False, pin_memory=True, drop_last=True)
 
-    path = 'models/best_model.pth'
+    path = args.model
     # Create SegNet model
     label_nbr = 3
-    model = SegNet(label_nbr)
+    #model = SegNet(label_nbr)
+    model = REDNet20()
     model = load_model(model, path)
 
     # Use appropriate device
     model = model.to(device)
     recon_img = recon(data_loader, model)
-    data_set.save_recon(recon_img)
+    #data_set.save_recon(recon_img, 'rednet')
 
 
 if __name__ == '__main__':
-    main()
+    main(*sys.argv)
