@@ -6,6 +6,7 @@ import sys
 from PIL import Image
 import tensorflow as tf
 import tensorflow.keras as keras
+from denoise import Denoiser
 
 def l2_norm(x, axis=1):
     """l2 norm"""
@@ -58,6 +59,15 @@ def save_feature2(datapath,reconpath, model):
     print(fawkes_features.shape)
     np.savez(reconpath[:-4]+'_f.npz', images = image_features, fawkes = fawkes_features, labels = labels)
     print('done!')
+
+
+def save_denoise(datapath):
+    images, fawkes, labels = load_data(datapath)
+    denoiser = Denoiser(fawkes)
+    output = denoiser.cal_wave()
+    print(output.shape)
+    np.savez(datapath[:-4]+'_de.npz', images = image, fawkes = output, labels = labels)
+    print('done! saved as:', datapath[:-4]+'_de.npz' )
 
 
 def load_image(path):
@@ -159,7 +169,7 @@ def main(*argv):
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--directory', '-d', type=str,
-                        help='the directory that contains images', default='./faces')
+                        help='the directory that contains images', default='faces/fawkes.npz')
     parser.add_argument('--reconpath', '-recon', type = str,
                         default=None)
     parser.add_argument('--model_name', '-mn', type=str,
@@ -174,9 +184,10 @@ def main(*argv):
     #combine(args.directory)
     model = load_extractor(args.model_name)
     #save_feature(args.directory, model)
-    if args.reconpath == None:
-        args.reconpath = args.directory + '_recon.npy'
-    save_feature2(args.directory, args.reconpath, model)
+    #if args.reconpath == None:
+    #    args.reconpath = args.directory + '_recon.npy'
+    #save_feature2(args.directory, args.reconpath, model)
+    save_denoise(args.directory)
 
 if __name__ == '__main__':
     main(*sys.argv)
