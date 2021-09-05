@@ -10,31 +10,27 @@ import sys
 import numpy as np
 import tensorflow as tf
 from tensorflow.keras.models import Model
-#from fawkes.align_face import aligner
-#from fawkes.utils import init_gpu, load_extractor, load_victim_model, preprocess, Faces, load_image
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 
+#from dataset import get_feature
 from warnings import simplefilter
 from sklearn.exceptions import ConvergenceWarning
 simplefilter("ignore", category=ConvergenceWarning)
+from utils import get_feature
 
 num_class = 20
 
 class Feature(object):
     #load feature dataset
-    def __init__(self, datapath,test_size = 0.3 ):
+    def __init__(self, datapath, denoise = False, test_size = 0.3 ):
         super(Feature, self).__init__()
         self.datapath = datapath
-        self.data = np.load(self.datapath)
-        self.images = self.data['images']
-        self.fawkes = self.data['fawkes']
-        self.labels = self.data['labels']
+        self.images, self.fawkes, self.labels = get_feature(self.datapath, denoise = denoise)
 
         #partition the dataset into training and testing for each label with same test size
-
         image_train = np.copy(self.images)
         label_train = np.copy(self.labels)
         #for each class
@@ -155,13 +151,14 @@ def main(*argv):
         argv = list(sys.argv)
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--path', '-p', type=str,
+    parser.add_argument('--datapath', '-d', type=str,
                         help='the path of feature set', default='faces/fawkes_feature.npz')
     parser.add_argument('--mode', '-m', type=int,
-                        help='0 for nn, 1 for linear', default= 0)
+                        help='0 for nn, 1 for linear', default = 0)
+    parser.add_argument('--denoise', '-de', type= bool, default = False)
     args = parser.parse_args(argv[1:])
 
-    dataset = Feature(args.path)
+    dataset = Feature(args.datapath, args.denoise)
     recognition(dataset, args.mode)
 
 

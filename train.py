@@ -7,9 +7,9 @@ from torch.utils.data import DataLoader
 from torchvision import transforms
 import torchvision.utils as vutils
 
-from model import SegNet
-from data import FaceScrub, Celeb
-import os, shutil
+from model import SegNet, REDNet20
+from data import FaceScrub, Celeb, Fawkes_train
+import os, shutil, sys
 
 input_nbr = 3
 imsize = 112
@@ -58,7 +58,7 @@ def save_checkpoint(epoch, model, optimizer, val_loss, is_best):
     torch.save(model.state_dict(), '{0}/train_{1}_{2:.3f}.pth'.format(save_folder, epoch, val_loss ))
     # If this checkpoint is the best so far, store a copy so it doesn't get overwritten by a worse checkpoint
     if is_best:
-        torch.save(model.state_dict(), '{0}/best_model.pth'.format(save_folder))
+        torch.save(model.state_dict(), '{0}/best_model_rednet.pth'.format(save_folder))
 
 
 def train(epoch, train_loader, model, optimizer):
@@ -118,7 +118,7 @@ def valid(val_loader, model, epoch):
     start = time.time()
     plot = True
     ensure_folder('out')
-    msg = 'val'
+    msg = 'rednet'
 
     with torch.no_grad():
         # Batches
@@ -162,15 +162,20 @@ def main():
     transform = transforms.Compose([transforms.ToTensor()])
     #train_set = FaceScrub('./face.npz', transform=transform)
     #test_set = FaceScrub('./face_test.npz', transform=transform)
-    train_set = Celeb('./data/celeba_3w.npy', transform = transform)
-    test_set = Celeb('./data/celeba_1w.npy', transform = transform)
+
+    #train_set = Celeb('./data/celeba_3w.npy', transform = transform)
+    #test_set = Celeb('./data/celeba_1w.npy', transform = transform)
+
+    train_set = Fawkes_train('./fawkes/celeba_1w_fawkes.npz', transform = transform)
+    test_set = Fawkes_train('./fawkes/celeba_1w_fawkes.npz', transform = transform, train = False)
+
     train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True, pin_memory=True, drop_last=True)
     val_loader = DataLoader(test_set, batch_size=batch_size, shuffle=False, pin_memory=True, drop_last=True)
 
     # Create SegNet model
     label_nbr = 3
-    model = SegNet(label_nbr)
-
+    #model = SegNet(label_nbr)
+    model = REDNet20()
     # Use appropriate device
     model = model.to(device)
 

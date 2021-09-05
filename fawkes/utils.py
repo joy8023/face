@@ -7,9 +7,7 @@ from PIL import Image
 import tensorflow as tf
 import tensorflow.keras as keras
 from denoise import Denoiser
-from utils import Extractor, load_extractor, load_data
 
-'''
 def l2_norm(x, axis=1):
     """l2 norm"""
     norm = tf.norm(x, axis=axis, keepdims=True)
@@ -36,14 +34,13 @@ def load_extractor(name):
 
     return model
 
-
 def load_data(datapath):
     data = np.load(datapath)
     images = data['images']
     fawkes = data['fawkes']
     labels = data['labels']
     return images, fawkes, labels
-'''
+
 def save_feature(datapath, model):
     images, fawkes, labels = load_data(datapath)
     image_features = model.predict(images)
@@ -89,7 +86,8 @@ def get_feature(datapath, model_name = 'extractor_0', denoise = False):
     fawkes_features = model.predict(fawkes)
     print('successfully load features')
     return np.array(image_features), np.array(fawkes_features), labels
-'''
+
+
 def load_image(path):
     try:
         img = Image.open(path)
@@ -128,8 +126,8 @@ def to_array(l):
     a = np.array(l)
     print(a.shape)
     return a
-'''
-#save as a single file for one person's original images and cloaked images
+
+#save into a single file for one person's original images and cloaked images
 def save_dataset(image_paths, save_path):
     print("Identify {} files in the directory".format(len(image_paths)))
     new_image_paths = []

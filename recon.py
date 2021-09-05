@@ -90,7 +90,9 @@ def recon(data_loader, model):
                       'Batch Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
                       'Loss {loss.val:.4f} ({loss.avg:.4f})\t'.format(i_batch, len(data_loader),
                                                                       batch_time=batch_time,
-                                                                      loss=losses))
+                                                                     loss=losses))
+            recon_img.append(to_image(recon))
+
             if plot:
                 fawkes = x[0:16]
                 recon = recon[0:16]
@@ -107,7 +109,7 @@ def recon(data_loader, model):
                 vutils.save_image(out, 'out/recon_{}.png'.format(msg.replace(" ", "")), normalize=False)
                 plot = False
 
-            recon_img.append(to_image(recon))
+            
 
     recon_img = np.concatenate(recon_img, axis = 0)
     print(recon_img.shape)
@@ -126,7 +128,7 @@ def main(*argv):
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--model', '-m', type=str,
-                        help='the path of model', default='models/best_model.pth')
+                        help='the path of model', default='models/best_model_rednet.pth')
     parser.add_argument('--data', '-d', type=str,
                         help='the path of data set', default= 'fawkes/faces/fawkes.npz')
     args = parser.parse_args(argv[1:])
@@ -134,7 +136,7 @@ def main(*argv):
 
     transform = transforms.Compose([transforms.ToTensor()])
     data_set = Fawkes(args.data, transform = transform)
-    data_loader = DataLoader(data_set, batch_size=batch_size, shuffle=False, pin_memory=True, drop_last=True)
+    data_loader = DataLoader(data_set, batch_size=batch_size, shuffle=False, pin_memory=True, drop_last=False)
 
     path = args.model
     # Create SegNet model
@@ -146,7 +148,7 @@ def main(*argv):
     # Use appropriate device
     model = model.to(device)
     recon_img = recon(data_loader, model)
-    #data_set.save_recon(recon_img, 'rednet')
+    data_set.save_recon(recon_img, '_rednet')
 
 
 if __name__ == '__main__':

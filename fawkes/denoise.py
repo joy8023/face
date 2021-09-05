@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 from skimage.metrics import peak_signal_noise_ratio, mean_squared_error
 from functools import partial
 from skimage.restoration import denoise_wavelet, estimate_sigma,calibrate_denoiser, denoise_nl_means
+from skimage.util import random_noise
 
 def load_data(datapath):
     data = np.load(datapath)
@@ -45,12 +46,14 @@ class Denoiser(object):
             data.append(output)
         data = to_array(data)
 
-        data = np.int8(data * 255 + 0.5)
-
+        data = np.uint8(data * 255 + 0.5)
+        print(data)
+        print('=================cal wavelet denoising done!=============')
         return data
 
     def nl_mean(self, sigma = 0.05):
         data = []
+
         for noisy in self.data:
             noisy = random_noise(noisy, var=sigma**2)
             patch_kw = dict(patch_size=5,      # 5x5 patches
@@ -63,7 +66,8 @@ class Denoiser(object):
             data.append(denoise)
 
         data = to_array(data)
-        data = np.int8(data * 255 + 0.5)
+        data = np.uint8(data * 255 + 0.5)
+        print('=================nl_mean denoising done!=============')
         return data
 '''
 
