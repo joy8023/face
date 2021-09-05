@@ -7,7 +7,7 @@ from PIL import Image
 import matplotlib.pyplot as plt
 from skimage.metrics import peak_signal_noise_ratio, mean_squared_error
 from functools import partial
-from skimage.restoration import denoise_wavelet, estimate_sigma,calibrate_denoiser
+from skimage.restoration import denoise_wavelet, estimate_sigma,calibrate_denoiser, denoise_nl_means
 
 def load_data(datapath):
     data = np.load(datapath)
@@ -27,7 +27,7 @@ class Denoiser(object):
         self.data = data
 
     #calibrate wavelet denoiser
-    def cal_wave():
+    def cal_wave(self):
         _denoise_wavelet = partial(denoise_wavelet, rescale_sigma=True)
         parameter_ranges = {'sigma': np.arange(0.001, 0.02, 0.001),
                     'wavelet': ['db1', 'db2'],
@@ -45,10 +45,27 @@ class Denoiser(object):
             data.append(output)
         data = to_array(data)
 
-        data = nnp.int8(data * 255 + 0.5)
+        data = np.int8(data * 255 + 0.5)
 
         return data
 
+    def nl_mean(self, sigma = 0.05):
+        data = []
+        for noisy in self.data:
+            noisy = random_noise(noisy, var=sigma**2)
+            patch_kw = dict(patch_size=5,      # 5x5 patches
+                patch_distance=6,  # 13x13 search area
+                multichannel = True)
+
+            # slow algorithm
+            denoise = denoise_nl_means(noisy, h=1.15 * sigma, fast_mode=False,
+                           **patch_kw)
+            data.append(denoise)
+
+        data = to_array(data)
+        data = np.int8(data * 255 + 0.5)
+        return data
+'''
 
 # rescale_sigma=True required to silence deprecation warnings
 _denoise_wavelet = partial(denoise_wavelet, rescale_sigma=True)
@@ -136,7 +153,7 @@ ax[2,2].imshow((im_visushrink - original)*10)
 fig.tight_layout()
 
 plt.show()
-
+'''
 
 '''
 def main(*argv):
