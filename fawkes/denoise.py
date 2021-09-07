@@ -7,7 +7,9 @@ from PIL import Image
 import matplotlib.pyplot as plt
 from skimage.metrics import peak_signal_noise_ratio, mean_squared_error
 from functools import partial
-from skimage.restoration import denoise_wavelet, estimate_sigma,calibrate_denoiser, denoise_nl_means
+from skimage.restoration import (denoise_wavelet, estimate_sigma, 
+                                calibrate_denoiser, denoise_nl_means,
+                                denoise_tv_chambolle, denoise_bilateral)
 from skimage.util import random_noise
 
 def load_data(datapath):
@@ -19,7 +21,7 @@ def load_data(datapath):
 
 def to_array(l):
     a = np.array(l)
-    print(a.shape)
+    print('after denoising:'a.shape)
     return a
 
 
@@ -55,20 +57,50 @@ class Denoiser(object):
         data = []
 
         for noisy in self.data:
-            noisy = random_noise(noisy, var=sigma**2)
+            #noisy = random_noise(noisy, var=sigma**2)
             patch_kw = dict(patch_size=5,      # 5x5 patches
                 patch_distance=6,  # 13x13 search area
                 multichannel = True)
 
             # slow algorithm
             denoise = denoise_nl_means(noisy, h=1.15 * sigma, fast_mode=False,
-                           **patch_kw)
+                           sigma = sigma, **patch_kw)
             data.append(denoise)
 
         data = to_array(data)
         data = np.uint8(data * 255 + 0.5)
         print('=================nl_mean denoising done!=============')
         return data
+
+    def tv(self, weight = 0.03):
+        data = []
+
+        for noisy in self.data:
+            #noisy = random_noise(noisy, var=sigma**2)
+            # slow algorithm
+            denoise = denoise_tv_chambolle(noisy, weight=weight, multichannel = True)
+            data.append(denoise)
+
+        data = to_array(data)
+        data = np.uint8(data * 255 + 0.5)
+        print('=================tv chambolle denoising done!=============')
+        return data
+
+    def bilateral(self):
+        data = []
+
+        for noisy in self.data:
+            #noisy = random_noise(noisy, var=sigma**2)
+            # slow algorithm
+            denoise = denoise_bilateral(noisy, sigma_color=0.02, 
+                    sigma_spatial=10, multichannel = True)
+            data.append(denoise)
+
+        data = to_array(data)
+        data = np.uint8(data * 255 + 0.5)
+        print('=================bilateral denoising done!=============')
+        return data
+
 '''
 
 # rescale_sigma=True required to silence deprecation warnings
