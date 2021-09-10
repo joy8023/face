@@ -7,7 +7,7 @@ from torch.utils.data import DataLoader
 from torchvision import transforms
 import torchvision.utils as vutils
 
-from model import SegNet, REDNet20
+from model import SegNet, REDNet20, REDNet30
 from data import FaceScrub, Celeb, Fawkes_train
 import os, shutil, sys
 
@@ -58,7 +58,7 @@ def save_checkpoint(epoch, model, optimizer, val_loss, is_best):
     torch.save(model.state_dict(), '{0}/train_{1}_{2:.3f}.pth'.format(save_folder, epoch, val_loss ))
     # If this checkpoint is the best so far, store a copy so it doesn't get overwritten by a worse checkpoint
     if is_best:
-        torch.save(model.state_dict(), '{0}/best_model_rednet.pth'.format(save_folder))
+        torch.save(model.state_dict(), '{0}/best_rn30_fawkes.pth'.format(save_folder))
 
 
 def train(epoch, train_loader, model, optimizer):
@@ -118,7 +118,7 @@ def valid(val_loader, model, epoch):
     start = time.time()
     plot = True
     ensure_folder('out')
-    msg = 'rednet'
+    msg = 'rn30_fawkes'
 
     with torch.no_grad():
         # Batches
@@ -153,6 +153,7 @@ def valid(val_loader, model, epoch):
                     out[i * 16 + 8:i * 16 + 16] = truth[i * 8:i * 8 + 8]
                 vutils.save_image(out, 'out/recon_{}_{}.png'.format(msg.replace(" ", ""), epoch), normalize=False)
                 plot = False
+                #print(y)
 
     return losses.avg
 
@@ -164,7 +165,8 @@ def main():
     #test_set = FaceScrub('./face_test.npz', transform=transform)
 
     #train_set = Celeb('./data/celeba_3w.npy', transform = transform)
-    #test_set = Celeb('./data/celeba_1w.npy', transform = transform)
+    #train_set = Celeb('./data/celeba_1w.npy', transform = transform)
+    #test_set = Celeb('./data/celeba_1w.npy', transform = transform, train = False)
 
     train_set = Fawkes_train('./fawkes/celeba_1w_fawkes.npz', transform = transform)
     test_set = Fawkes_train('./fawkes/celeba_1w_fawkes.npz', transform = transform, train = False)
@@ -175,7 +177,7 @@ def main():
     # Create SegNet model
     label_nbr = 3
     #model = SegNet(label_nbr)
-    model = REDNet20()
+    model = REDNet30()
     # Use appropriate device
     model = model.to(device)
 

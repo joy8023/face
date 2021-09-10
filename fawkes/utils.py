@@ -79,9 +79,11 @@ def get_feature(datapath, model_name = 'extractor_0', denoise = False):
     
     if denoise:
         denoiser = Denoiser(fawkes)
-        #fawkes = denoiser.cal_wave()
-        fawkes = denoiser.nl_mean()
-        np.savez(datapath[:-4]+'_nlmean.npz', images = images, fawkes = fawkes, labels = labels)
+        fawkes = denoiser.tv()
+        #fawkes = denoiser.nl_mean()
+        #fawkes = 0.4* fawkes2 + 0.6*fawkes1
+        #fawkes = denoiser.bilateral()
+        np.savez(datapath[:-4]+'_tv.npz', images = images, fawkes = fawkes, labels = labels)
     image_features = model.predict(images)
     fawkes_features = model.predict(fawkes)
     print('successfully load features')

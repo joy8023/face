@@ -21,7 +21,7 @@ def load_data(datapath):
 
 def to_array(l):
     a = np.array(l)
-    print('after denoising:'a.shape)
+    print('after denoising:', a.shape)
     return a
 
 
@@ -44,12 +44,27 @@ class Denoiser(object):
 
         data = []
         for noisy in self.data:
-            output = calibrated_denoiser(noisy/255.0)
+            output = calibrated_denoiser(noisy)
             data.append(output)
         data = to_array(data)
 
         data = np.uint8(data * 255 + 0.5)
         print(data)
+        print('=================cal wavelet denoising done!=============')
+        return data
+
+    def wavelet(self, sigma = 0.05):
+
+        data = []
+        for noisy in self.data:
+            output = denoise_wavelet(noisy, multichannel = True, convert2ycbcr=True,
+                            method='BayesShrink', mode='soft',sigma=sigma,
+                                rescale_sigma=True)
+            data.append(output)
+        data = to_array(data)
+
+        data = np.uint8(data * 255 + 0.5)
+        #print(data)
         print('=================cal wavelet denoising done!=============')
         return data
 
@@ -63,7 +78,7 @@ class Denoiser(object):
                 multichannel = True)
 
             # slow algorithm
-            denoise = denoise_nl_means(noisy, h=1.15 * sigma, fast_mode=False,
+            denoise = denoise_nl_means(noisy, h=0.8 * sigma, fast_mode=True,
                            sigma = sigma, **patch_kw)
             data.append(denoise)
 
@@ -72,7 +87,7 @@ class Denoiser(object):
         print('=================nl_mean denoising done!=============')
         return data
 
-    def tv(self, weight = 0.03):
+    def tv(self, weight = 0.3):
         data = []
 
         for noisy in self.data:
@@ -83,7 +98,7 @@ class Denoiser(object):
 
         data = to_array(data)
         data = np.uint8(data * 255 + 0.5)
-        print('=================tv chambolle denoising done!=============')
+        print('=================tv chambolle {} denoising done!============='.format(weight))
         return data
 
     def bilateral(self):

@@ -9,7 +9,7 @@ from torchvision import transforms
 import torchvision.utils as vutils
 import torch.nn.functional as F
 
-from model import SegNet, REDNet20
+from model import SegNet, REDNet20, REDNet30
 from data import Fawkes
 import numpy as np
 
@@ -63,7 +63,7 @@ def recon(data_loader, model):
 
     start = time.time()
     plot = True
-    msg = 'rednet'
+    msg = 'fawkes'
 
     with torch.no_grad():
         # Batches
@@ -75,9 +75,12 @@ def recon(data_loader, model):
             recon = model(x)
 
             loss = torch.sqrt((recon - y).pow(2).mean())
+            #loss2 = torch.sqrt((x - y).pow(2).mean())
+            #print(loss.item(), loss2.item())
             recover_loss += F.mse_loss(recon, y, reduction='sum').item()
-            cloak_loss += F.mse_loss(x, y, reduction='sum').item()
 
+            cloak_loss += F.mse_loss(x, y, reduction='sum').item()
+            #print(recover_loss, cloak_loss)
             # Keep track of metrics
             losses.update(loss.item())
             batch_time.update(time.time() - start)
@@ -96,8 +99,8 @@ def recon(data_loader, model):
             if plot:
                 fawkes = x[0:16]
                 recon = recon[0:16]
-                fawkes_diff = (fawkes - y[0:16])*10
-                recon_diff = (recon - y[0:16])*10
+                fawkes_diff = torch.abs((fawkes - y[0:16])*3).clamp_(0,1)
+                recon_diff = torch.abs((recon - y[0:16])*3).clamp_(0,1)
                 out = torch.cat((fawkes, recon, fawkes_diff, recon_diff))
 
                 for i in range(2):
@@ -114,8 +117,8 @@ def recon(data_loader, model):
     recon_img = np.concatenate(recon_img, axis = 0)
     print(recon_img.shape)
 
-    recover_loss /= len(data_loader.dataset) * imsize * imsize
-    cloak_loss /= len(data_loader.dataset) * imsize * imsize
+    recover_loss /= len(data_loader.dataset) * imsize * imsize*3
+    cloak_loss /= len(data_loader.dataset) * imsize * imsize*3
     print('\n Average MSE loss: recover: {:.6f}, cloak: {:.6f},\n'.format(recover_loss,cloak_loss))
 
     return recon_img
@@ -128,7 +131,7 @@ def main(*argv):
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--model', '-m', type=str,
-                        help='the path of model', default='models/best_model_rednet.pth')
+                        help='the path of model', default='models/best_model_fawkes.pth')
     parser.add_argument('--data', '-d', type=str,
                         help='the path of data set', default= 'fawkes/faces/fawkes.npz')
     args = parser.parse_args(argv[1:])
@@ -142,13 +145,13 @@ def main(*argv):
     # Create SegNet model
     label_nbr = 3
     #model = SegNet(label_nbr)
-    model = REDNet20()
+    model = REDNet30()
     model = load_model(model, path)
 
     # Use appropriate device
     model = model.to(device)
     recon_img = recon(data_loader, model)
-    data_set.save_recon(recon_img, '_rednet')
+    data_set.save_recon(recon_img)
 
 
 if __name__ == '__main__':

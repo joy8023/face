@@ -5,6 +5,21 @@ import os
 import numpy as np
 from torch.utils.data import Dataset
 from PIL import Image
+from skimage.restoration import (denoise_wavelet, estimate_sigma, 
+                                calibrate_denoiser, denoise_nl_means,
+                                denoise_tv_chambolle, denoise_bilateral)
+
+def tv(images, weight = 0.3):
+    data = []
+
+    for noisy in images:
+
+        denoise = denoise_tv_chambolle(noisy, weight=weight, multichannel = True)
+        data.append(denoise)
+
+    print('=================tv chambolle denoising done!=============')
+    
+    return np.array(data)
 
 class FaceScrub(Dataset):
     def __init__(self, path, transform=None):
@@ -38,24 +53,39 @@ class FaceScrub(Dataset):
         return img, target
 
 class Celeb(Dataset):
-    def __init__(self, path, transform=None):
+    def __init__(self, path, transform=None, train = True, train_size = 0.8):
         self.root = os.path.expanduser(path)
         self.transform = transform
 
         data = np.load(path)
 
         #print(data.shape)
+        '''
         np.random.seed(666)
         perm = np.arange(len(data))
         np.random.shuffle(perm)
-        self.data = data[perm]/255.0
+        '''
+        labels = data
+        #print(data.shape)
+        idx = int(data.shape[0] * train_size)
+        #print(idx)
+        if train:
+            self.data = tv(data[:idx])
+            self.labels = labels[:idx]/255.0
+            #print(self.data)
+        else:
+            #for test
+            self.data = tv(data[idx:])
+            self.labels = labels[idx:]/255.0
+            #print(self.data.shape)
+
 
     def __len__(self):
         return len(self.data)
 
     def __getitem__(self, index):
-        #img, target = self.data[index], self.labels[index]
-        img, target = self.data[index], self.data[index]
+        img, target = self.data[index], self.labels[index]
+        #img, target = self.data[index], self.data[index]
         #img = Image.fromarray(img)
 
         if self.transform is not None:
@@ -94,8 +124,8 @@ class Fawkes(Dataset):
             self.label = labels/225.0
 
     #save original images with reconstructed images
-    def save_recon(self, recon, msg = None):
-        file = self.path[:-4]+ msg +'_recon.npz'
+    def save_recon(self, recon, msg = '_'):
+        file = self.path[:-4]+ msg +'recon.npz'
         #print(reconre4567yyyu)
         #print('recon.shape:',recon.shape)
         np.savez(file, images = self.dataset['images'], fawkes = recon, labels = self.dataset['labels'])
