@@ -221,6 +221,17 @@ class feature_extractor(nn.Module):
         features = l2_norm(self.model(batch_normalized))
         return features
 
+def load_model_torch(model_root):
+
+    model = ResNet_152(input_size)
+    print("Loading Attack Backbone Checkpoint '{}'".format(model_root))
+    model.load_state_dict(torch.load(model_root))
+        
+    feature_extractor_model = nn.DataParallel(
+            nn.Sequential(feature_extractor(model=model))).to(device)
+
+    return feature_extractor_model, device
+
 def get_feature_torch(imgs, model_root, input_size = [112, 112]):
 
     model = ResNet_152(input_size)
