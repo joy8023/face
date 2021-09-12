@@ -55,10 +55,10 @@ def save_checkpoint(epoch, model, optimizer, val_loss, is_best):
     #filename = '{0}/checkpoint_{1}_{2:.3f}.tar'.format(save_folder, epoch, val_loss)
     #torch.save(state, filename)
 
-    torch.save(model.state_dict(), '{0}/train_{1}_{2:.3f}.pth'.format(save_folder, epoch, val_loss ))
+    #torch.save(model.state_dict(), '{0}/train_{1}_{2:.3f}.pth'.format(save_folder, epoch, val_loss ))
     # If this checkpoint is the best so far, store a copy so it doesn't get overwritten by a worse checkpoint
     if is_best:
-        torch.save(model.state_dict(), '{0}/best_rn30_fawkes.pth'.format(save_folder))
+        torch.save(model.state_dict(), '{0}/best_rn30_5x.pth'.format(save_folder))
 
 
 def train(epoch, train_loader, model, optimizer):
@@ -118,7 +118,7 @@ def valid(val_loader, model, epoch):
     start = time.time()
     plot = True
     ensure_folder('out')
-    msg = 'rn30_fawkes'
+    msg = 'rn30_5x'
 
     with torch.no_grad():
         # Batches
@@ -180,14 +180,14 @@ def main():
     model = REDNet30()
     # Use appropriate device
     model = model.to(device)
-
+    
     # define the optimizer
     # optimizer = optim.LBFGS(model.parameters(), lr=0.8)
     optimizer = optim.Adam(model.parameters(), lr=lr)
 
     best_loss = 100000
     epochs_since_improvement = 0
-
+    
     # Epochs
     for epoch in range(start_epoch, epochs):
         # Decay learning rate if there is no improvement for 8 consecutive epochs, and terminate training after 20

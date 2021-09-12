@@ -123,6 +123,7 @@ class Fawkes(Dataset):
             self.data = data/255.0
             self.label = labels/225.0
 
+
     #save original images with reconstructed images
     def save_recon(self, recon, msg = '_'):
         file = self.path[:-4]+ msg +'recon.npz'
@@ -148,7 +149,7 @@ class Fawkes(Dataset):
 #fawkes dataset for training and validation
 #full path of dataset
 class Fawkes_train(Dataset):
-    def __init__(self, path, transform=None, train  = True, train_size = 0.8):
+    def __init__(self, path, transform=None, train = True, train_size = 0.8, enhance = True):
         #self.root = os.path.expanduser(path)
         self.path = path
         self.transform = transform
@@ -157,18 +158,26 @@ class Fawkes_train(Dataset):
         dataset = np.load(file)
 
         #we are gonna to recover the image so the images are labels
-        labels = dataset['images']
-        data = dataset['fawkes']
+        labels = dataset['images']/255.0
+        data = dataset['fawkes']/255.0
+
 
         idx = int(data.shape[0] * train_size)
 
         if train == True:
-            self.data = data[:idx]/255.0
-            self.label = labels[:idx]/225.0
+            self.data = data[:idx]
+            self.label = labels[:idx]
+            print('add 5x noise')
+            noise = self.label - self.data
+            self.data = np.clip(self.data + noise * 5, 0, 1) 
+
         else:
             #for test
-            self.data = data[idx:]/255.0
-            self.label = labels[idx:]/225.0
+            self.data = data[idx:]
+            self.label = labels[idx:]
+            print('add 5x noise')
+            noise = self.label - self.data
+            self.data = np.clip(self.data + noise*5, 0, 1) 
 
 
 

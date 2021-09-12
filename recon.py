@@ -63,7 +63,7 @@ def recon(data_loader, model):
 
     start = time.time()
     plot = True
-    msg = 'fawkes'
+    msg = '5x'
 
     with torch.no_grad():
         # Batches
@@ -97,10 +97,12 @@ def recon(data_loader, model):
             recon_img.append(to_image(recon))
 
             if plot:
-                fawkes = x[0:16]
-                recon = recon[0:16]
-                fawkes_diff = torch.abs((fawkes - y[0:16])*3).clamp_(0,1)
-                recon_diff = torch.abs((recon - y[0:16])*3).clamp_(0,1)
+                s = 32
+                e = s+16
+                fawkes = x[s:e]
+                recon = recon[s:e]
+                fawkes_diff = torch.abs((fawkes - y[s:e])*5).clamp_(0,1)
+                recon_diff = torch.abs((recon - y[s:e])*5).clamp_(0,1)
                 out = torch.cat((fawkes, recon, fawkes_diff, recon_diff))
 
                 for i in range(2):
@@ -117,8 +119,8 @@ def recon(data_loader, model):
     recon_img = np.concatenate(recon_img, axis = 0)
     print(recon_img.shape)
 
-    recover_loss /= len(data_loader.dataset) * imsize * imsize*3
-    cloak_loss /= len(data_loader.dataset) * imsize * imsize*3
+    recover_loss /= len(data_loader.dataset) * imsize * imsize
+    cloak_loss /= len(data_loader.dataset) * imsize * imsize
     print('\n Average MSE loss: recover: {:.6f}, cloak: {:.6f},\n'.format(recover_loss,cloak_loss))
 
     return recon_img
@@ -148,10 +150,11 @@ def main(*argv):
     model = REDNet30()
     model = load_model(model, path)
 
+
     # Use appropriate device
     model = model.to(device)
     recon_img = recon(data_loader, model)
-    data_set.save_recon(recon_img)
+    data_set.save_recon(recon_img, '_5x_')
 
 
 if __name__ == '__main__':

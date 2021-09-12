@@ -98,7 +98,7 @@ class Denoiser(object):
 
         data = to_array(data)
         data = np.uint8(data * 255 + 0.5)
-        print('=================tv chambolle {} denoising done!============='.format(weight))
+        print('=================tv chambolle (weight:{}) denoising done!============='.format(weight))
         return data
 
     def bilateral(self):
