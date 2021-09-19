@@ -19,7 +19,8 @@ from sklearn.preprocessing import StandardScaler
 from warnings import simplefilter
 from sklearn.exceptions import ConvergenceWarning
 simplefilter("ignore", category=ConvergenceWarning)
-from utils import get_feature, get_feature_torch
+from utils import get_feature
+from resnet import get_feature_resnet
 
 num_class = 20
 
@@ -29,7 +30,7 @@ class Feature(object):
         super(Feature, self).__init__()
         self.datapath = datapath
         self.images, self.fawkes, self.labels = get_feature(self.datapath, denoise = denoise)
-        #self.images, self.fawkes, self.labels = get_feature_torch(self.datapath)
+        #self.images, self.fawkes, self.labels = get_feature_resnet(self.datapath)
 
         #partition the dataset into training and testing for each label with same test size
         image_train = np.copy(self.images)

@@ -3,6 +3,8 @@ import numpy as np
 import torch.nn as nn
 from torch.nn import Linear, Conv2d, BatchNorm1d, BatchNorm2d, ReLU, Dropout, MaxPool2d, Sequential, Module
 import torchvision.transforms as transforms
+from torch.utils.data import DataLoader
+from torch.utils.data import Dataset
 use_cuda = torch.cuda.is_available()
 device = torch.device("cuda" if use_cuda else "cpu")
 
@@ -214,7 +216,7 @@ class feature_extractor(nn.Module):
         features = l2_norm(self.model(batch_normalized))
         return features
 
-def load_model_torch(model_root, input_size = [112,112]):
+def load_resnet(model_root, input_size = [112,112]):
 
     model = ResNet_152(input_size)
     print("Loading Attack Backbone Checkpoint '{}'".format(model_root))
@@ -225,4 +227,37 @@ def load_model_torch(model_root, input_size = [112,112]):
 
     return feature_extractor_model, device
 
+
+def get_feature_resnet(datapath):
+
+    model, device = load_resnet('model/Backbone_ResNet_152_Arcface_Epoch_65.pth')
+    batch_size = 128
+    #images, fawkes, labels = load_data(datapath)
+    
+    dataset = Fawkes(datapath)
+    loader = DataLoader(dataset, batch_size=batch_size, shuffle=False, pin_memory=True, drop_last=False)
+    #print(images.shape)
+    labels = dataset.get_label()
+
+    image_features = []
+    fawkes_features = []
+
+    model.eval()
+    with torch.no_grad():
+        for batch, (images, fawkes) in enumerate(loader):
+            images = images.to(device, dtype=torch.float)
+            fawkes = fawkes.to(device, dtype=torch.float)
+
+            image_f = model(images).to('cpu').numpy()
+            fawkes_f = model(fawkes).to('cpu').numpy()
+
+            image_features.append(image_f)
+            fawkes_features.append(fawkes_f)
+
+    image_features = np.concatenate(image_features, axis = 0)
+    fawkes_features = np.concatenate(fawkes_features, axis = 0)
+    
+    print(image_features.shape)
+
+    return image_features, fawkes_features, labels
 

@@ -3,11 +3,11 @@ import os
 import tensorflow as tf
 import tensorflow.keras as keras
 from denoise import Denoiser
-from model_resnet import load_model_torch
-import torch
-from torchvision import transforms
-from torch.utils.data import DataLoader
-from torch.utils.data import Dataset
+#from model_resnet import load_model_torch
+#import torch
+#from torchvision import transforms
+#from torch.utils.data import DataLoader
+#from torch.utils.data import Dataset
 
 class Fawkes(Dataset):
     def __init__(self, path):
@@ -87,40 +87,6 @@ def get_feature(datapath, model_name = 'extractor_0', denoise = False):
     fawkes_features = model.predict(fawkes)
     print('successfully load features')
     return np.array(image_features), np.array(fawkes_features), labels
-
-
-def get_feature_torch(datapath):
-
-    model, device = load_model_torch('model/Backbone_ResNet_152_Arcface_Epoch_65.pth')
-    batch_size = 128
-    #images, fawkes, labels = load_data(datapath)
-    
-    dataset = Fawkes(datapath)
-    loader = DataLoader(dataset, batch_size=batch_size, shuffle=False, pin_memory=True, drop_last=False)
-    #print(images.shape)
-    labels = dataset.get_label()
-
-    image_features = []
-    fawkes_features = []
-
-    model.eval()
-    with torch.no_grad():
-        for batch, (images, fawkes) in enumerate(loader):
-            images = images.to(device, dtype=torch.float)
-            fawkes = fawkes.to(device, dtype=torch.float)
-
-            image_f = model(images).to('cpu').numpy()
-            fawkes_f = model(fawkes).to('cpu').numpy()
-
-            image_features.append(image_f)
-            fawkes_features.append(fawkes_f)
-
-    image_features = np.concatenate(image_features, axis = 0)
-    fawkes_features = np.concatenate(fawkes_features, axis = 0)
-    
-    print(image_features.shape)
-
-    return image_features, fawkes_features, labels
 
 
 
