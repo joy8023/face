@@ -1,13 +1,40 @@
-#import argparse
-#import glob
 import numpy as np
 import os
-#import sys
-#from PIL import Image
 import tensorflow as tf
 import tensorflow.keras as keras
 from denoise import Denoiser
 from model_resnet import load_model_torch
+import torch
+from torchvision import transforms
+from torch.utils.data import DataLoader
+from torch.utils.data import Dataset
+
+class Fawkes(Dataset):
+    def __init__(self, path):
+
+        #self.path = path
+        self.transform = transforms.Compose([transforms.ToTensor()])
+        self.dataset = np.load(path)
+
+        images = self.dataset['images']
+        fawkes = self.dataset['fawkes']
+        self.labels = self.dataset['labels']
+        
+        self.images = images/255.0
+        self.fawkes = fawkes/225.0
+
+    def get_label(self):
+        return self.labels
+
+    def __len__(self):
+        return len(self.images)
+
+    def __getitem__(self, index):
+
+        img, target = self.images[index], self.fawkes[index]
+        img = self.transform(img)
+        target = self.transform(target)
+        return img, target
 
 def l2_norm(x, axis=1):
     """l2 norm"""
@@ -62,35 +89,36 @@ def get_feature(datapath, model_name = 'extractor_0', denoise = False):
     return np.array(image_features), np.array(fawkes_features), labels
 
 
-def get_feature_torch(datapath, input_size = [112, 112]):
+def get_feature_torch(datapath):
 
     model, device = load_model_torch('model/Backbone_ResNet_152_Arcface_Epoch_65.pth')
     batch_size = 128
-    images, fawkes, labels = load_data(datapath)
+    #images, fawkes, labels = load_data(datapath)
+    
+    dataset = Fawkes(datapath)
+    loader = DataLoader(dataset, batch_size=batch_size, shuffle=False, pin_memory=True, drop_last=False)
+    #print(images.shape)
+    labels = dataset.get_label()
 
-    batch = int(images.shape[0]/batch_size)+1
     image_features = []
     fawkes_features = []
 
-    for i in range(batch):
-        if i*batch+batch_size > imgs.shape[0]:
-            end = imgs.shape[0]
-        else:
-            end = i*batch+batch_size
-        
-        image_b = images[i*batch, end].to(device)
-        fawkes_b = fawkes[i*batch, end].to(device)
+    model.eval()
+    with torch.no_grad():
+        for batch, (images, fawkes) in enumerate(loader):
+            images = images.to(device, dtype=torch.float)
+            fawkes = fawkes.to(device, dtype=torch.float)
 
-        image_f = model(image_b).to('cpu').numpy()
-        fawkes_f = model(fawkes_b).to('cpu').numpy()
+            image_f = model(images).to('cpu').numpy()
+            fawkes_f = model(fawkes).to('cpu').numpy()
 
-        image_features.append(image_f)
-        fawkes_features.append(fawkes_f)
+            image_features.append(image_f)
+            fawkes_features.append(fawkes_f)
 
     image_features = np.concatenate(image_features, axis = 0)
     fawkes_features = np.concatenate(fawkes_features, axis = 0)
     
-    print(features.shape)
+    print(image_features.shape)
 
     return image_features, fawkes_features, labels
 

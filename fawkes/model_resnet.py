@@ -1,7 +1,9 @@
+import torch
 import numpy as np
 import torch.nn as nn
 from torch.nn import Linear, Conv2d, BatchNorm1d, BatchNorm2d, ReLU, Dropout, MaxPool2d, Sequential, Module
-
+import torchvision.transforms as transforms
+use_cuda = torch.cuda.is_available()
 device = torch.device("cuda" if use_cuda else "cpu")
 
 # Support: ['ResNet_50', 'ResNet_101', 'ResNet_152']
@@ -12,13 +14,10 @@ def conv3x3(in_planes, out_planes, stride = 1):
 
     return Conv2d(in_planes, out_planes, kernel_size = 3, stride = stride,
                      padding = 1, bias = False)
-
-
 def conv1x1(in_planes, out_planes, stride = 1):
     """1x1 convolution"""
 
     return Conv2d(in_planes, out_planes, kernel_size = 1, stride = stride, bias = False)
-
 
 class BasicBlock(Module):
     expansion = 1
@@ -50,8 +49,6 @@ class BasicBlock(Module):
         out = self.relu(out)
 
         return out
-
-
 class Bottleneck(Module):
     expansion = 4
 
@@ -88,8 +85,6 @@ class Bottleneck(Module):
         out = self.relu(out)
 
         return out
-
-
 class ResNet(Module):
 
     def __init__(self, input_size, block, layers, zero_init_residual = True):
@@ -171,31 +166,29 @@ def ResNet_18(input_size, **kwargs):
     model = ResNet(input_size, Bottleneck, [2, 2, 2, 2], **kwargs)
 
     return model
-
-
 def ResNet_50(input_size, **kwargs):
     """Constructs a ResNet-50 model.
     """
     model = ResNet(input_size, Bottleneck, [3, 4, 6, 3], **kwargs)
 
     return model
-
-
 def ResNet_101(input_size, **kwargs):
     """Constructs a ResNet-101 model.
     """
     model = ResNet(input_size, Bottleneck, [3, 4, 23, 3], **kwargs)
 
     return model
-
-
 def ResNet_152(input_size, **kwargs):
     """Constructs a ResNet-152 model.
     """
     model = ResNet(input_size, Bottleneck, [3, 8, 36, 3], **kwargs)
 
     return model
-
+    
+# normalize image to [-1,1]
+normalize = transforms.Compose([
+            transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])
+        ])
 
 def normalize_batch(imgs_tensor):
     normalized_imgs = torch.empty_like(imgs_tensor)
@@ -221,7 +214,7 @@ class feature_extractor(nn.Module):
         features = l2_norm(self.model(batch_normalized))
         return features
 
-def load_model_torch(model_root):
+def load_model_torch(model_root, input_size = [112,112]):
 
     model = ResNet_152(input_size)
     print("Loading Attack Backbone Checkpoint '{}'".format(model_root))
@@ -232,31 +225,4 @@ def load_model_torch(model_root):
 
     return feature_extractor_model, device
 
-def get_feature_torch(imgs, model_root, input_size = [112, 112]):
-
-    model = ResNet_152(input_size)
-    print("Loading Attack Backbone Checkpoint '{}'".format(model_root))
-    model.load_state_dict(torch.load(model_root))
-        
-    feature_extractor_model = nn.DataParallel(
-            nn.Sequential(feature_extractor(model=model))).to(device)
-
-    batch_size = 128
-
-    batch = int(imgs.shape[0]/batch_size)+1
-    features = []
-    for i in range(batch):
-        if i*batch+128 > imgs.shape[0]:
-            end = imgs.shape[0]
-        else:
-            end = i*batch+128
-        
-        data = imgs[i*batch, end].to(device)
-        feature = feature_extractor_model(data).to('cpu').numpy()
-        features.append(feature)
-
-    features = np.concatenate(features, axis = 0)
-    print(features.shape)
-
-    return features
 

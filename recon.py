@@ -63,7 +63,7 @@ def recon(data_loader, model):
 
     start = time.time()
     plot = True
-    msg = '5x'
+    msg = '10x'
 
     with torch.no_grad():
         # Batches
@@ -135,7 +135,7 @@ def main(*argv):
     parser.add_argument('--model', '-m', type=str,
                         help='the path of model', default='models/best_model_fawkes.pth')
     parser.add_argument('--data', '-d', type=str,
-                        help='the path of data set', default= 'fawkes/faces/fawkes.npz')
+                        help='the path of data set', default= 'fawkes/faces/fawkes/fawkes.npz')
     args = parser.parse_args(argv[1:])
 
 
