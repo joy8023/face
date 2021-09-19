@@ -10,6 +10,7 @@ import torchvision.utils as vutils
 from model import SegNet, REDNet20, REDNet30
 from data import FaceScrub, Celeb, Fawkes_train
 import os, shutil, sys
+from fawkes.resnet import load_resnet
 
 input_nbr = 3
 imsize = 112
@@ -65,6 +66,7 @@ def train(epoch, train_loader, model, optimizer):
     # Ensure dropout layers are in train mode
     model.train()
 
+
     # Loss function
     # criterion = nn.MSELoss().to(device)
 
@@ -104,7 +106,59 @@ def train(epoch, train_loader, model, optimizer):
                   'Loss {loss.val:.4f} ({loss.avg:.4f})\t'.format(epoch, i_batch, len(train_loader),
                                                                   batch_time=batch_time,
                                                                   loss=losses))
+#train model with feature loss
+def train2(epoch, train_loader, model, optimizer):
+    # Ensure dropout layers are in train mode
+    model.train()
+    
+    resnet, _ = load_resnet('fawkes/model/Backbone_ResNet_152_Arcface_Epoch_65.pth')
+    resnet.eval()
+    # Loss function
+    # criterion = nn.MSELoss().to(device)
 
+    batch_time = ExpoAverageMeter()  # forward prop. + back prop. time
+    losses = ExpoAverageMeter()  # loss (per word decoded)
+
+    a = 1
+    start = time.time()
+
+    # Batches
+    for i_batch, (x, y) in enumerate(train_loader):
+        # Set device options
+        x = x.to(device, dtype=torch.float)
+        y = y.to(device, dtype=torch.float)
+
+        # Zero gradients
+        optimizer.zero_grad()
+
+        y_hat = model(x)
+        # print('y_hat.size(): ' + str(y_hat.size())) # [32, 3, 224, 224]
+        feature = resnet(y)
+        feature_hat = resnet(y_hat)
+
+        feature_loss = nn.functional.l1_loss(feature, feature_hat)
+        image_loss = torch.sqrt((y_hat - y).pow(2).mean())
+
+        loss = image_loss + a * feature_loss
+        print(image_loss,feature_loss,loss)
+        loss.backward()
+
+        # optimizer.step(closure)
+        optimizer.step()
+
+        # Keep track of metrics
+        losses.update(loss.item())
+        batch_time.update(time.time() - start)
+
+        start = time.time()
+
+        # Print status
+        if i_batch % print_freq == 0:
+            print('Epoch: [{0}][{1}/{2}]\t'
+                  'Batch Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
+                  'Loss {loss.val:.4f} ({loss.avg:.4f})\t'.format(epoch, i_batch, len(train_loader),
+                                                                  batch_time=batch_time,
+                                                                  loss=losses))
 
 def valid(val_loader, model, epoch):
     model.eval()  # eval mode (no dropout or batchnorm)
