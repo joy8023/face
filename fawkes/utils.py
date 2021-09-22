@@ -8,7 +8,7 @@ from denoise import Denoiser
 #from torchvision import transforms
 #from torch.utils.data import DataLoader
 #from torch.utils.data import Dataset
-
+'''
 class Fawkes(Dataset):
     def __init__(self, path):
 
@@ -35,7 +35,7 @@ class Fawkes(Dataset):
         img = self.transform(img)
         target = self.transform(target)
         return img, target
-
+'''
 def l2_norm(x, axis=1):
     """l2 norm"""
     norm = tf.norm(x, axis=axis, keepdims=True)

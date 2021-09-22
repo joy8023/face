@@ -63,7 +63,7 @@ def recon(data_loader, model):
 
     start = time.time()
     plot = True
-    msg = '10x'
+    msg = '5xf'
 
     with torch.no_grad():
         # Batches
@@ -97,7 +97,7 @@ def recon(data_loader, model):
             recon_img.append(to_image(recon))
 
             if plot:
-                s = 32
+                s = 48
                 e = s+16
                 fawkes = x[s:e]
                 recon = recon[s:e]
@@ -146,15 +146,15 @@ def main(*argv):
     path = args.model
     # Create SegNet model
     label_nbr = 3
-    #model = SegNet(label_nbr)
-    model = REDNet30()
+    model = SegNet(label_nbr)
+    #model = REDNet20()
     model = load_model(model, path)
 
 
     # Use appropriate device
     model = model.to(device)
     recon_img = recon(data_loader, model)
-    data_set.save_recon(recon_img, '_5x_')
+    data_set.save_recon(recon_img, '__')
 
 
 if __name__ == '__main__':

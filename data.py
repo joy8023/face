@@ -169,7 +169,7 @@ class Fawkes_train(Dataset):
             self.label = labels[:idx]
             print('add 5x noise')
             noise = self.label - self.data
-            self.data = np.clip(self.data + noise * 5, 0, 1) 
+            self.data = np.clip(self.data + noise * 10, 0, 1) 
 
         else:
             #for test
@@ -177,7 +177,7 @@ class Fawkes_train(Dataset):
             self.label = labels[idx:]
             print('add 5x noise')
             noise = self.label - self.data
-            self.data = np.clip(self.data + noise*5, 0, 1) 
+            self.data = np.clip(self.data + noise*10, 0, 1) 
 
 
 

@@ -9,7 +9,32 @@ use_cuda = torch.cuda.is_available()
 device = torch.device("cuda" if use_cuda else "cpu")
 
 # Support: ['ResNet_50', 'ResNet_101', 'ResNet_152']
+class Fawkes(Dataset):
+    def __init__(self, path):
 
+        #self.path = path
+        self.transform = transforms.Compose([transforms.ToTensor()])
+        self.dataset = np.load(path)
+
+        images = self.dataset['images']
+        fawkes = self.dataset['fawkes']
+        self.labels = self.dataset['labels']
+        
+        self.images = images/255.0
+        self.fawkes = fawkes/225.0
+
+    def get_label(self):
+        return self.labels
+
+    def __len__(self):
+        return len(self.images)
+
+    def __getitem__(self, index):
+
+        img, target = self.images[index], self.fawkes[index]
+        img = self.transform(img)
+        target = self.transform(target)
+        return img, target
 
 def conv3x3(in_planes, out_planes, stride = 1):
     """3x3 convolution with padding"""
