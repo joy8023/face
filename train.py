@@ -65,8 +65,6 @@ def save_checkpoint(epoch, model, optimizer, val_loss, is_best):
 def train(epoch, train_loader, model, optimizer):
     # Ensure dropout layers are in train mode
     model.train()
-
-
     # Loss function
     # criterion = nn.MSELoss().to(device)
 
@@ -217,9 +215,6 @@ def valid2(resnet, val_loader, model, epoch):
 def valid(val_loader, model, epoch):
     model.eval()  # eval mode (no dropout or batchnorm)
 
-    # Loss function
-    # criterion = nn.MSELoss().to(device)
-
     batch_time = ExpoAverageMeter()  # forward prop. + back prop. time
     losses = ExpoAverageMeter()  # loss (per word decoded)
 
@@ -265,6 +260,49 @@ def valid(val_loader, model, epoch):
 
     return losses.avg
 
+#train inversion model
+def train_inv(epoch, data_loader, model, optimizer):
+
+    model.train()
+
+    for batch_idx, (feature, image) in enumerate(data_loader):
+        feature, image = feature.to(device), image.to(device)
+        optimizer.zero_grad()
+
+        recon = model(feature)
+        loss = F.mse_loss(recon, image)
+        loss.backward()
+        optimizer.step()
+
+        if batch_idx % print_freq == 0:
+            print('Train Epoch: {} [{}/{}]\tLoss: {:.6f}'.format( epoch, batch_idx * len(data),
+                                                                  len(data_loader.dataset), loss.item()))
+
+def test_inv(epoch, data_loader, model, msg):
+
+    mse_loss = 0
+    plot = True
+
+    with torch.no_grad():
+        for data, target in data_loader:
+            data, target = data.to(device), target.to(device)
+
+            recon = model(data)
+            mse_loss += F.mse_loss(recon, data, reduction='sum').item()
+
+            if plot:
+                truth = target[0:32]
+                inverse = recon[0:32]
+                out = torch.cat((inverse, truth))
+                for i in range(4):
+                    out[i * 16:i * 16 + 8] = inverse[i * 8:i * 8 + 8]
+                    out[i * 16 + 8:i * 16 + 16] = truth[i * 8:i * 8 + 8]
+                vutils.save_image(out, 'out/recon_{}_{}.png'.format(msg.replace(" ", ""), epoch), normalize=False)
+                plot = False
+
+    mse_loss /= len(data_loader.dataset) * 112 * 112
+    print('\nTest inversion model on {} set: Average MSE loss: {:.6f}\n'.format(msg, mse_loss))
+    return mse_loss
 
 def main():
 
@@ -285,13 +323,21 @@ def main():
     # Create SegNet model
     label_nbr = 3
     #model = SegNet(label_nbr)
-    model = REDNet30()
-    # Use appropriate device
-    model = model.to(device)
     
-    # define the optimizer
+    # Use appropriate device
+
+    #model = model.to(device)
+    model = SegNet(label_nbr).to(device)
+    optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
     # optimizer = optim.LBFGS(model.parameters(), lr=0.8)
+
+    #model and optimizer for rednet
+    model = REDNet30().to(device)
     optimizer = optim.Adam(model.parameters(), lr=lr)
+          
+    #model and opt for inversion model
+    model = Inversion().to(device)
+    optimizer = optim.Adam(model.parameters(), lr=0.0002, betas=(0.5, 0.999), amsgrad=True)
 
     best_loss = 100000
     epochs_since_improvement = 0

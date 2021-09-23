@@ -37,7 +37,6 @@ class conv2DBatchNormRelu(nn.Module):
         outputs = self.cbr_unit(inputs)
         return outputs
 
-
 class segnetDown2(nn.Module):
     def __init__(self, in_size, out_size):
         super(segnetDown2, self).__init__()
@@ -51,7 +50,6 @@ class segnetDown2(nn.Module):
         unpooled_shape = outputs.size()
         outputs, indices = self.maxpool_with_argmax(outputs)
         return outputs, indices, unpooled_shape
-
 
 class segnetDown3(nn.Module):
     def __init__(self, in_size, out_size):
@@ -69,7 +67,6 @@ class segnetDown3(nn.Module):
         outputs, indices = self.maxpool_with_argmax(outputs)
         return outputs, indices, unpooled_shape
 
-
 class segnetUp2(nn.Module):
     def __init__(self, in_size, out_size):
         super(segnetUp2, self).__init__()
@@ -82,7 +79,6 @@ class segnetUp2(nn.Module):
         outputs = self.conv1(outputs)
         outputs = self.conv2(outputs)
         return outputs
-
 
 class segnetUp3(nn.Module):
     def __init__(self, in_size, out_size):
@@ -98,7 +94,6 @@ class segnetUp3(nn.Module):
         outputs = self.conv2(outputs)
         outputs = self.conv3(outputs)
         return outputs
-
 
 class SegNet(nn.Module):
     def __init__(self, n_classes=3, in_channels=3, is_unpooling=True):
@@ -171,155 +166,52 @@ class SegNet(nn.Module):
                 l2.bias.data = l1.bias.data
 
 
-class Classifier(nn.Module):
-    def __init__(self, nc, ndf, nz):
-        super(Classifier, self).__init__()
-
-        self.nc = nc
-        self.ndf = ndf
-        self.nz = nz
-
-        self.encoder = nn.Sequential(
-            # input is (nc) x 64 x 64
-            nn.Conv2d(nc, ndf, 3, 1, 1),
-            nn.BatchNorm2d(ndf),
-            nn.MaxPool2d(2, 2, 0),
-            nn.ReLU(True),
-            # state size. (ndf) x 32 x 32
-            nn.Conv2d(ndf, ndf * 2, 3, 1, 1),
-            nn.BatchNorm2d(ndf * 2),
-            nn.MaxPool2d(2, 2, 0),
-            nn.ReLU(True),
-            # state size. (ndf*2) x 16 x 16
-            nn.Conv2d(ndf * 2, ndf * 4, 3, 1, 1),
-            nn.BatchNorm2d(ndf * 4),
-            nn.MaxPool2d(2, 2, 0),
-            nn.ReLU(True),
-            # state size. (ndf*4) x 8 x 8
-            nn.Conv2d(ndf * 4, ndf * 8, 3, 1, 1),
-            nn.BatchNorm2d(ndf * 8),
-            nn.MaxPool2d(2, 2, 0),
-            nn.ReLU(True),
-            # state size. (ndf*8) x 4 x 4
-        )
-
-        self.fc = nn.Sequential(
-            nn.Linear(ndf * 8 * 4 * 4, nz * 5),
-            nn.Dropout(0.5),
-            nn.Linear(nz * 5, nz),
-        )
-
-    def forward(self, x, logit = False, log = True):
-
-        x = x.view(-1, 1, 64, 64)
-        x = self.encoder(x)
-        x = x.view(-1, self.ndf * 8 * 4 * 4)
-        x = self.fc(x)
-
-        if logit:
-            return x
-
-        if log:
-            return F.log_softmax(x, dim=1)
-        else:
-            #return F.log_softmax(x, dim=1)
-            return F.softmax(x, dim=1)
-
 class Inversion(nn.Module):
-    def __init__(self, nc, ngf, nz, truncation, c):
+    def __init__(self, in_size, f = 128, nc = 3):
         super(Inversion, self).__init__()
 
-        self.nc = nc
-        self.ngf = ngf
-        self.nz = nz
-        self.truncation = truncation
-        self.c = c
+        #in size is equal to the number of feature
+        self.in_size = in_size
+        self.f = f  # internal feature
+        self.nc = nc #number of channel 
 
         self.decoder = nn.Sequential(
             # input is Z
-            nn.ConvTranspose2d(nz, ngf * 8, 4, 1, 0),
-            nn.BatchNorm2d(ngf * 8),
+            nn.ConvTranspose2d(in_size, f * 16, 4, 1, 0),
+            nn.BatchNorm2d(ngf * 16),
             nn.Tanh(),
             # state size. (ngf*8) x 4 x 4
-            nn.ConvTranspose2d(ngf * 8, ngf * 4, 4, 2, 1),
-            nn.BatchNorm2d(ngf * 4),
+            nn.ConvTranspose2d(f * 16, f * 8, 4, 1, 0),
+            nn.BatchNorm2d(f * 8),
             nn.Tanh(),
-            # state size. (ngf*4) x 8 x 8
-            nn.ConvTranspose2d(ngf * 4, ngf * 2, 4, 2, 1),
-            nn.BatchNorm2d(ngf * 2),
+            # state size. (ngf*4) x 7 x 7
+            nn.ConvTranspose2d(f * 8, f * 4, 4, 2, 1),
+            nn.BatchNorm2d(f * 4),
             nn.Tanh(),
-            # state size. (ngf*2) x 16 x 16
-            nn.ConvTranspose2d(ngf * 2, ngf, 4, 2, 1),
-            nn.BatchNorm2d(ngf),
+            # state size. (ngf*2) x 14 x 14
+            nn.ConvTranspose2d(f * 4, f * 2, 4, 2, 1),
+            nn.BatchNorm2d(f * 2),
             nn.Tanh(),
-            # state size. (ngf) x 32 x 32
-            nn.ConvTranspose2d(ngf, nc, 4, 2, 1),
+            # state size. (ngf) x 28 x 28
+            nn.ConvTranspose2d(f * 2, f, 4, 2, 1),
+            nn.BatchNorm2d(f),
+            nn.Tanh(),
+            # state size. (ngf) x 56 x 56
+            nn.ConvTranspose2d(f, nc, 4, 2, 1),
             nn.Sigmoid()
-            # state size. (nc) x 64 x 64
+            # state size. (nc) x 112 x 112
+
         )
 
     def forward(self, x):
-        topk, indices = torch.topk(x, self.truncation)
-        topk = torch.clamp(torch.log(topk), min=-1000) + self.c
-        topk_min = topk.min(1, keepdim=True)[0]
-        topk = topk + F.relu(-topk_min)
-        x = torch.zeros(len(x), self.nz).cuda().scatter_(1, indices, topk)
 
-        x = x.view(-1, self.nz, 1, 1)
+        x = x.view(-1, self.in_size, 1, 1)
         x = self.decoder(x)
-        x = x.view(-1, 1, 64, 64)
+        x = x.view(-1, nc, 112, 112)
         return x
-
-
-class Inversion(nn.Module):
-    def __init__(self, nc, ngf, nz, truncation, c):
-        super(Inversion, self).__init__()
-
-        self.nc = nc
-        self.ngf = ngf
-        self.nz = nz
-        self.truncation = truncation
-        self.c = c
-
-        self.decoder = nn.Sequential(
-            # input is Z
-            nn.ConvTranspose2d(nz, ngf * 8, 4, 1, 0),
-            nn.BatchNorm2d(ngf * 8),
-            nn.Tanh(),
-            # state size. (ngf*8) x 4 x 4
-            nn.ConvTranspose2d(ngf * 8, ngf * 4, 4, 2, 1),
-            nn.BatchNorm2d(ngf * 4),
-            nn.Tanh(),
-            # state size. (ngf*4) x 8 x 8
-            nn.ConvTranspose2d(ngf * 4, ngf * 2, 4, 2, 1),
-            nn.BatchNorm2d(ngf * 2),
-            nn.Tanh(),
-            # state size. (ngf*2) x 16 x 16
-            nn.ConvTranspose2d(ngf * 2, ngf, 4, 2, 1),
-            nn.BatchNorm2d(ngf),
-            nn.Tanh(),
-            # state size. (ngf) x 32 x 32
-            nn.ConvTranspose2d(ngf, nc, 4, 2, 1),
-            nn.Sigmoid()
-            # state size. (nc) x 64 x 64
-        )
-
-    def forward(self, x):
-        topk, indices = torch.topk(x, self.truncation)
-        topk = torch.clamp(torch.log(topk), min=-1000) + self.c
-        topk_min = topk.min(1, keepdim=True)[0]
-        topk = topk + F.relu(-topk_min)
-        x = torch.zeros(len(x), self.nz).cuda().scatter_(1, indices, topk)
-
-        x = x.view(-1, self.nz, 1, 1)
-        x = self.decoder(x)
-        x = x.view(-1, 1, 64, 64)
-        return x
-
 
 import math
 from torch import nn
-
 
 class REDNet10(nn.Module):
     def __init__(self, num_layers=5, num_features=64):

@@ -9,6 +9,9 @@ from skimage.restoration import (denoise_wavelet, estimate_sigma,
                                 calibrate_denoiser, denoise_nl_means,
                                 denoise_tv_chambolle, denoise_bilateral)
 
+from fawkes.utils import get_feature
+from fawkes.resnet import get_feature_resnet
+
 def tv(images, weight = 0.3):
     data = []
 
