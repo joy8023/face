@@ -2,6 +2,12 @@ import torch
 from base_model import BaseModel
 import networks
 
+def to_image(out):
+    ndarr = out.mul(255).add_(0.5).clamp_(0, 255).permute(0, 2, 3, 1).to('cpu', torch.uint8).numpy()
+    #print(ndarr.shape)
+    
+    return ndarr
+
 
 class Pix2PixModel(BaseModel):
     """ This class implements the pix2pix model, for learning a mapping from input images to output images given paired data.
@@ -88,6 +94,7 @@ class Pix2PixModel(BaseModel):
         #print(self.real_A.shape)
         self.fake_B = self.netG(self.real_A)  # G(A)
 
+
     def backward_D(self):
         """Calculate GAN loss for the discriminator"""
         # Fake; stop backprop to the generator by detaching fake_B
@@ -126,3 +133,7 @@ class Pix2PixModel(BaseModel):
         self.optimizer_G.zero_grad()        # set G's gradients to zero
         self.backward_G()                   # calculate graidents for G
         self.optimizer_G.step()             # udpate G's weights
+
+    def get_image(self):
+        return self.fake_B
+

@@ -104,6 +104,23 @@ class MyDataset(data.Dataset):
         """Return the total number of images."""
         return len(self.truth)
 
+    #save original images with reconstructed images
+    def save_recon(self, recon, msg = '_'):
+        print('======processing recon images=====')
+        print('recon.shape:', recon.shape)
+        num_img = recon.shape[0]
+        images = np.zeros((num_img, 112, 112, 3))
+
+        for i in range(num_img):
+            images[i] = resize(recon[i], (112,112))
+
+        print(num_img.shape)
+        file = self.path[:-4]+ msg +'recon.npz'
+        #print(reconre4567yyyu)
+        #print('recon.shape:',recon.shape)
+        np.savez(file, images = self.dataset['images'], fawkes = images, labels = self.dataset['labels'])
+        print('saved as {}'.format(file))
+
 
 class MyDataLoader():
     """Wrapper class of Dataset class that performs multi-threaded data loading"""
@@ -137,3 +154,6 @@ class MyDataLoader():
             if i * self.opt.batch_size >= self.opt.max_dataset_size:
                 break
             yield data
+
+    def save_recon(self, recon):
+        self.dataset.save_recon(recon)
