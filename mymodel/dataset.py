@@ -50,11 +50,11 @@ class MyDataset(data.Dataset):
         #self.transform = transform
 
         #file = os.path.join(self.path)
-        dataset = np.load(self.path)
+        self.dataset = np.load(self.path)
 
         #to generate truth from fawkes
-        truth = (dataset['images']/255.0)
-        fawkes = (dataset['fawkes']/255.0)
+        truth = (self.dataset['images']/255.0)
+        fawkes = (self.dataset['fawkes']/255.0)
 
         idx = int(truth.shape[0] * train_size)
 
@@ -110,11 +110,14 @@ class MyDataset(data.Dataset):
         print('recon.shape:', recon.shape)
         num_img = recon.shape[0]
         images = np.zeros((num_img, 112, 112, 3))
-
+        #print(recon)
         for i in range(num_img):
             images[i] = resize(recon[i], (112,112))
 
-        print(num_img.shape)
+        images = (images * 255 +0.5).astype(np.uint8)
+        print(images.shape)
+        #images.astype(np.uint8)
+        print(images)
         file = self.path[:-4]+ msg +'recon.npz'
         #print(reconre4567yyyu)
         #print('recon.shape:',recon.shape)
@@ -125,7 +128,7 @@ class MyDataset(data.Dataset):
 class MyDataLoader():
     """Wrapper class of Dataset class that performs multi-threaded data loading"""
 
-    def __init__(self, opt):
+    def __init__(self, opt, train_size = 0.8):
         """Initialize this class
 
         Step 1: create a dataset instance given the name [dataset_mode]
@@ -133,13 +136,14 @@ class MyDataLoader():
         """
         self.opt = opt
         #dataset_class = find_dataset_using_name(opt.dataset_mode)
-        self.dataset = MyDataset(opt.dataroot)
+        self.dataset = MyDataset(opt.dataroot, train_size = train_size)
         print("dataset [%s] was created" % type(self.dataset).__name__)
         self.dataloader = data.DataLoader(
             self.dataset,
             batch_size=opt.batch_size,
-            shuffle=not opt.serial_batches,
-            num_workers=int(opt.num_threads))
+            shuffle=False,
+            num_workers=int(opt.num_threads),
+            drop_last = False)
 
     def load_data(self):
         return self

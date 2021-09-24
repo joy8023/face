@@ -135,5 +135,9 @@ class Pix2PixModel(BaseModel):
         self.optimizer_G.step()             # udpate G's weights
 
     def get_image(self):
-        return self.fake_B
+        ndarr = self.fake_B.permute(0, 2, 3, 1).to('cpu').numpy()
+    #print(ndarr.shape)
+    
+        return ndarr
+        #return self.fake_B
 
