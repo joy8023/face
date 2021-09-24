@@ -8,8 +8,8 @@ import random
 import sys
 
 import numpy as np
-import tensorflow as tf
-from tensorflow.keras.models import Model
+#import tensorflow as tf
+#from tensorflow.keras.models import Model
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import make_pipeline
@@ -22,15 +22,19 @@ simplefilter("ignore", category=ConvergenceWarning)
 from utils import get_feature
 from resnet import get_feature_resnet
 import random
+
 num_class = 20
 
 class Feature(object):
     #load feature dataset
-    def __init__(self, datapath, denoise = False, test_size = 0.1 ):
+    def __init__(self, args, test_size = 0.1 ):
         super(Feature, self).__init__()
-        self.datapath = datapath
-        #self.images, self.fawkes, self.labels = get_feature(self.datapath, denoise = denoise)
-        self.images, self.fawkes, self.labels = get_feature_resnet(self.datapath)
+        self.datapath = args.datapath
+
+        if args.feature == 0:
+            self.images, self.fawkes, self.labels = get_feature(self.datapath, denoise = args.denoise)
+        else:
+            self.images, self.fawkes, self.labels = get_feature_resnet(self.datapath)
 
         #partition the dataset into training and testing for each label with same test size
         image_train = np.copy(self.images)
@@ -160,9 +164,11 @@ def main(*argv):
     parser.add_argument('--mode', '-m', type=int,
                         help='0 for nn, 1 for linear', default = 0)
     parser.add_argument('--denoise', '-de', type= bool, default = False)
+    parser.add_argument('--feature', '-f', type=int,
+                        help ='feature extractor, 0 for fawkes, 1 for lowkey', default = 0)
     args = parser.parse_args(argv[1:])
 
-    dataset = Feature(args.datapath, args.denoise)
+    dataset = Feature(args)
     recognition(dataset, args.mode)
 
 
