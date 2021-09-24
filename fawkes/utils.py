@@ -9,32 +9,6 @@ from denoise import Denoiser
 #from torch.utils.data import DataLoader
 #from torch.utils.data import Dataset
 '''
-class Fawkes(Dataset):
-    def __init__(self, path):
-
-        #self.path = path
-        self.transform = transforms.Compose([transforms.ToTensor()])
-        self.dataset = np.load(path)
-
-        images = self.dataset['images']
-        fawkes = self.dataset['fawkes']
-        self.labels = self.dataset['labels']
-        
-        self.images = images/255.0
-        self.fawkes = fawkes/225.0
-
-    def get_label(self):
-        return self.labels
-
-    def __len__(self):
-        return len(self.images)
-
-    def __getitem__(self, index):
-
-        img, target = self.images[index], self.fawkes[index]
-        img = self.transform(img)
-        target = self.transform(target)
-        return img, target
 '''
 def l2_norm(x, axis=1):
     """l2 norm"""

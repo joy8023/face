@@ -21,16 +21,16 @@ from sklearn.exceptions import ConvergenceWarning
 simplefilter("ignore", category=ConvergenceWarning)
 from utils import get_feature
 from resnet import get_feature_resnet
-
+import random
 num_class = 20
 
 class Feature(object):
     #load feature dataset
-    def __init__(self, datapath, denoise = False, test_size = 0.3 ):
+    def __init__(self, datapath, denoise = False, test_size = 0.1 ):
         super(Feature, self).__init__()
         self.datapath = datapath
-        self.images, self.fawkes, self.labels = get_feature(self.datapath, denoise = denoise)
-        #self.images, self.fawkes, self.labels = get_feature_resnet(self.datapath)
+        #self.images, self.fawkes, self.labels = get_feature(self.datapath, denoise = denoise)
+        self.images, self.fawkes, self.labels = get_feature_resnet(self.datapath)
 
         #partition the dataset into training and testing for each label with same test size
         image_train = np.copy(self.images)
@@ -41,15 +41,17 @@ class Feature(object):
         for i in range(num_class):
             #get the index array of label i
             idx = np.where(label_train == i )[0]
-            idx_start = idx[0]
-            idx_end = idx_start + int(test_size* idx.shape[0])+1
+            #idx_start = idx[0]
+            #idx_end = idx[-1]
             #print(idx_start,idx_end)
+            test_idx = random.sample(range(idx[0],idx[-1]+1), int(test_size * idx.shape[0]))
+            #print(test_idx)
 
-            image_test.append(image_train[idx_start:idx_end])
-            label_test.append(label_train[idx_start:idx_end])
+            image_test.append(image_train[test_idx])
+            label_test.append(label_train[test_idx])
 
-            image_train = np.delete(image_train, range(idx_start, idx_end), axis = 0)
-            label_train = np.delete(label_train, range(idx_start, idx_end), axis = 0)
+            image_train = np.delete(image_train, test_idx, axis = 0)
+            label_train = np.delete(label_train, test_idx, axis = 0)
 
         
         self.label_test = np.concatenate(label_test, axis = 0)
