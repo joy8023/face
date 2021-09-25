@@ -49,11 +49,8 @@ def to_image(out):
     #print(ndarr.shape)
     return ndarr
 
-def recon(data_loader, model):
+def recon(data_loader, model, msg):
     model.eval()  # eval mode (no dropout or batchnorm)
-
-    # Loss function
-    # criterion = nn.MSELoss().to(device)
 
     batch_time = ExpoAverageMeter()  # forward prop. + back prop. time
     cloak_loss = 0
@@ -63,7 +60,7 @@ def recon(data_loader, model):
 
     start = time.time()
     plot = True
-    msg = '5xf'
+    #msg = '5xf'
 
     with torch.no_grad():
         # Batches
@@ -75,12 +72,10 @@ def recon(data_loader, model):
             recon = model(x)
 
             loss = torch.sqrt((recon - y).pow(2).mean())
-            #loss2 = torch.sqrt((x - y).pow(2).mean())
-            #print(loss.item(), loss2.item())
             recover_loss += F.mse_loss(recon, y, reduction='sum').item()
 
             cloak_loss += F.mse_loss(x, y, reduction='sum').item()
-            #print(recover_loss, cloak_loss)
+
             # Keep track of metrics
             losses.update(loss.item())
             batch_time.update(time.time() - start)
@@ -111,7 +106,7 @@ def recon(data_loader, model):
                     out[i * 32 + 16:i * 32 + 24] = fawkes_diff[i * 8:i * 8 + 8]
                     out[i * 32 + 24:i * 32 + 32] = recon_diff[i * 8:i * 8 + 8]
 
-                vutils.save_image(out, 'out/recon_{}.png'.format(msg.replace(" ", "")), normalize=False)
+                vutils.save_image(out, 'out/recon{}.png'.format(msg.replace(" ", "")), normalize=False)
                 plot = False
 
             
@@ -152,9 +147,10 @@ def main(*argv):
 
 
     # Use appropriate device
+    msg = '_'
     model = model.to(device)
-    recon_img = recon(data_loader, model)
-    data_set.save_recon(recon_img, '__')
+    recon_img = recon(data_loader, model, msg)
+    data_set.save_recon(recon_img, msg)
 
 
 if __name__ == '__main__':

@@ -8,14 +8,12 @@ import random
 import sys
 
 import numpy as np
-#import tensorflow as tf
-#from tensorflow.keras.models import Model
+
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 
-#from dataset import get_feature
 from warnings import simplefilter
 from sklearn.exceptions import ConvergenceWarning
 simplefilter("ignore", category=ConvergenceWarning)
@@ -27,7 +25,7 @@ num_class = 20
 
 class Feature(object):
     #load feature dataset
-    def __init__(self, args, test_size = 0.1 ):
+    def __init__(self, args, test_size = 0.1):
         super(Feature, self).__init__()
         self.datapath = args.datapath
 

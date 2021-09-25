@@ -9,8 +9,8 @@ from skimage.restoration import (denoise_wavelet, estimate_sigma,
                                 calibrate_denoiser, denoise_nl_means,
                                 denoise_tv_chambolle, denoise_bilateral)
 
-from fawkes.utils import get_feature
-from fawkes.resnet import get_feature_resnet
+from utils import get_feature
+from resnet import get_feature_resnet
 
 def tv(images, weight = 0.3):
     data = []
@@ -129,7 +129,7 @@ class Fawkes(Dataset):
 
     #save original images with reconstructed images
     def save_recon(self, recon, msg = '_'):
-        file = self.path[:-4]+ msg +'recon.npz'
+        file = self.path[:-4]+ msg +'_recon.npz'
         #print(reconre4567yyyu)
         #print('recon.shape:',recon.shape)
         np.savez(file, images = self.dataset['images'], fawkes = recon, labels = self.dataset['labels'])

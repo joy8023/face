@@ -108,8 +108,6 @@ def train(epoch, train_loader, model, optimizer):
 def train2(resnet, epoch, train_loader, model, optimizer):
     # Ensure dropout layers are in train mode
     model.train()
-    #resnet, _ = load_resnet('fawkes/model/Backbone_ResNet_152_Arcface_Epoch_65.pth')
-    #resnet.eval()
 
     batch_time = ExpoAverageMeter()  # forward prop. + back prop. time
     losses = ExpoAverageMeter()  # loss (per word decoded)
@@ -156,8 +154,6 @@ def train2(resnet, epoch, train_loader, model, optimizer):
 
 def valid2(resnet, val_loader, model, epoch):
     model.eval()  # eval mode (no dropout or batchnorm)
-    #resnet, _ = load_resnet('fawkes/model/Backbone_ResNet_152_Arcface_Epoch_65.pth')
-    #resnet.eval()
 
     batch_time = ExpoAverageMeter()  # forward prop. + back prop. time
     losses = ExpoAverageMeter()  # loss (per word decoded)
@@ -184,7 +180,6 @@ def valid2(resnet, val_loader, model, epoch):
 
             loss = image_loss + a * feature_loss
             #loss = torch.sqrt((y_hat - y).pow(2).mean())
-
 
             # Keep track of metrics
             losses.update(loss.item())
@@ -336,14 +331,14 @@ def main():
     optimizer = optim.Adam(model.parameters(), lr=lr)
           
     #model and opt for inversion model
-    model = Inversion().to(device)
-    optimizer = optim.Adam(model.parameters(), lr=0.0002, betas=(0.5, 0.999), amsgrad=True)
+    #model = Inversion().to(device)
+    #optimizer = optim.Adam(model.parameters(), lr=0.0002, betas=(0.5, 0.999), amsgrad=True)
 
     best_loss = 100000
     epochs_since_improvement = 0
     
-    resnet, _ = load_resnet('fawkes/model/Backbone_ResNet_152_Arcface_Epoch_65.pth')
-    resnet.eval()
+    #resnet, _ = load_resnet('fawkes/model/Backbone_ResNet_152_Arcface_Epoch_65.pth')
+    #resnet.eval()
     
     # Epochs
     for epoch in range(start_epoch, epochs):

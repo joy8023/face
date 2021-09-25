@@ -9,41 +9,6 @@ import tensorflow.keras as keras
 from denoise import Denoiser
 from utils import Extractor, load_extractor, load_data
 
-'''
-def l2_norm(x, axis=1):
-    """l2 norm"""
-    norm = tf.norm(x, axis=axis, keepdims=True)
-    output = x / norm
-    return output
-
-class Extractor(object):
-    def __init__(self, model):
-        self.model = model
-
-    def predict(self, imgs ):
-        imgs = imgs / 255.0
-        embeds = l2_norm(self.model.predict(imgs,batch_size = 64))
-        return embeds
-
-    def __call__(self, x):
-        print('flag')
-        return self.predict(x,batch_size = 32)
-
-def load_extractor(name):
-
-    model = keras.models.load_model("model/{}.h5".format(name))
-    model = Extractor(model)
-
-    return model
-
-
-def load_data(datapath):
-    data = np.load(datapath)
-    images = data['images']
-    fawkes = data['fawkes']
-    labels = data['labels']
-    return images, fawkes, labels
-'''
 def save_feature(datapath, model):
     images, fawkes, labels = load_data(datapath)
     image_features = model.predict(images)
@@ -89,46 +54,7 @@ def get_feature(datapath, model_name = 'extractor_0', denoise = False):
     fawkes_features = model.predict(fawkes)
     print('successfully load features')
     return np.array(image_features), np.array(fawkes_features), labels
-'''
-def load_image(path):
-    try:
-        img = Image.open(path)
-    except PIL.UnidentifiedImageError:
-        return None
-    except IsADirectoryError:
-        return None
 
-    try:
-        info = img._getexif()
-    except OSError:
-        return None
-
-    if info is not None:
-        for orientation in ExifTags.TAGS.keys():
-            if ExifTags.TAGS[orientation] == 'Orientation':
-                break
-
-        exif = dict(img._getexif().items())
-        if orientation in exif.keys():
-            if exif[orientation] == 3:
-                img = img.rotate(180, expand=True)
-            elif exif[orientation] == 6:
-                img = img.rotate(270, expand=True)
-            elif exif[orientation] == 8:
-                img = img.rotate(90, expand=True)
-            else:
-                pass
-    img = img.convert('RGB')
-    img = img.resize((112,112))
-    image_array = np.asarray(img)
-
-    return image_array
-
-def to_array(l):
-    a = np.array(l)
-    print(a.shape)
-    return a
-'''
 #save as a single file for one person's original images and cloaked images
 def save_dataset(image_paths, save_path):
     print("Identify {} files in the directory".format(len(image_paths)))
