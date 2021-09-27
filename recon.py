@@ -130,7 +130,9 @@ def main(*argv):
     parser.add_argument('--model', '-m', type=str,
                         help='the path of model', default='models/best_model_fawkes.pth')
     parser.add_argument('--data', '-d', type=str,
-                        help='the path of data set', default= 'fawkes/faces/fawkes/fawkes.npz')
+                        help='the path of data set', default= 'faces/fawkes.npz')
+    parser.add_argument('--msg', '-msg', type=str,
+                        help='msg for saving files', default='_')
     args = parser.parse_args(argv[1:])
 
 
@@ -142,15 +144,15 @@ def main(*argv):
     # Create SegNet model
     label_nbr = 3
     model = SegNet(label_nbr)
-    #model = REDNet20()
+    #model = REDNet30()
     model = load_model(model, path)
 
 
     # Use appropriate device
-    msg = '_'
+    #msg = '_'
     model = model.to(device)
-    recon_img = recon(data_loader, model, msg)
-    data_set.save_recon(recon_img, msg)
+    recon_img = recon(data_loader, model, args.msg)
+    data_set.save_recon(recon_img, args.msg)
 
 
 if __name__ == '__main__':

@@ -129,7 +129,7 @@ class Fawkes(Dataset):
 
     #save original images with reconstructed images
     def save_recon(self, recon, msg = '_'):
-        file = self.path[:-4]+ msg +'_recon.npz'
+        file = self.path[:-4]+'/'+ msg +'.npz'
         #print(reconre4567yyyu)
         #print('recon.shape:',recon.shape)
         np.savez(file, images = self.dataset['images'], fawkes = recon, labels = self.dataset['labels'])
