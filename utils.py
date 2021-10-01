@@ -37,13 +37,42 @@ def load_data(datapath):
     labels = data['labels']
     return images, fawkes, labels
 
+def gen_mask(alpha = 0):
+    images, fawkes, labels = load_data('faces/fawkes.npz')
+    diff = np.abs(fawkes - images)
+    mask = np.zeros(images.shape)
+    #print(mask.shape)
+    idx = np.where(diff>alpha)
+    mask[idx] = 1
+    print('percentage of mask:', mask.sum()/2270/112/112/3)
+
+    return mask
+
+
+
+
+def add_mask(images,fawkes):
+    print('==========applying mask==========')
+    #maskset = np.load('faces/fawkes_mask.npz')
+    #img_mask = maskset['images']
+    #faw_mask = maskset['fawkes']
+    img_mask = gen_mask()
+    idx = np.where(img_mask > 0)
+    fawkes[idx] = images[idx]
+    #fawkes = images
+    return fawkes
+
+
+
 #get feature of images after denoising directly
 #input fawkes.npz
 def get_feature(datapath, model_name = 'extractor_0', denoise = False):
     
     model = load_extractor(model_name)
     images, fawkes, labels = load_data(datapath)
-    
+
+    #fawkes = add_mask(images,fawkes)
+    #fawkes = images
     if denoise:
         denoiser = Denoiser(fawkes)
         fawkes = denoiser.tv()

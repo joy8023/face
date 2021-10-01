@@ -25,7 +25,7 @@ num_class = 20
 
 class Feature(object):
     #load feature dataset
-    def __init__(self, args, test_size = 0.1):
+    def __init__(self, args, test_size = 0.3):
         super(Feature, self).__init__()
         self.datapath = args.datapath
 
@@ -37,31 +37,33 @@ class Feature(object):
         #partition the dataset into training and testing for each label with same test size
         image_train = np.copy(self.images)
         label_train = np.copy(self.labels)
+        fawkes_train = np.copy(self.fawkes)
+
         #for each class
         label_test = []
         image_test = []
+
         for i in range(num_class):
             #get the index array of label i
             idx = np.where(label_train == i )[0]
-            #idx_start = idx[0]
-            #idx_end = idx[-1]
-            #print(idx_start,idx_end)
-            test_idx = random.sample(range(idx[0],idx[-1]+1), int(test_size * idx.shape[0]))
-            #print(test_idx)
 
+            test_idx = random.sample(range(idx[0],idx[-1]+1), int(test_size * idx.shape[0]))
+            
             image_test.append(image_train[test_idx])
             label_test.append(label_train[test_idx])
 
             image_train = np.delete(image_train, test_idx, axis = 0)
             label_train = np.delete(label_train, test_idx, axis = 0)
+            fawkes_train = np.delete(fawkes_train, test_idx, axis = 0)
 
         
         self.label_test = np.concatenate(label_test, axis = 0)
         self.image_test = np.concatenate(image_test, axis = 0)   
         print(self.image_test.shape)
-        print(self.label_test.shape)
+
         self.image_train = image_train
         self.label_train = label_train
+        self.fawkes_train = fawkes_train
 
     def get_label(self):
         return self.label_train, self.label_test
@@ -73,12 +75,10 @@ class Feature(object):
     def replace(self, user = 0):
         image_train = np.copy(self.image_train)
         idx_train = np.where(self.label_train == user)
-        image_train[idx_train] = self.fawkes[idx_train]
+        image_train[idx_train] = self.fawkes_train[idx_train]
 
         image_test = np.copy(self.image_test)
         idx_test = np.where(self.label_test == user)
-        
-        #image_test[idx_test] = self.fawkes[idx_test]
 
         return image_train, image_test, idx_train, idx_test
 
@@ -109,7 +109,7 @@ def recognition(feature, mode = 0):
 
     #train and test model for each user
     for user in range(num_class):
-
+    #for user in [19]:
         label_train,label_test = feature.get_label()
         image_train,image_test, idx_train, idx_test= feature.replace(user)
 
@@ -158,7 +158,7 @@ def main(*argv):
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--datapath', '-d', type=str,
-                        help='the path of feature set', default='faces/fawkes_feature.npz')
+                        help='the path of feature set', default='faces/fawkes.npz')
     parser.add_argument('--mode', '-m', type=int,
                         help='0 for nn, 1 for linear', default = 0)
     parser.add_argument('--denoise', '-de', type= bool, default = False)
