@@ -80,5 +80,5 @@ if __name__ == '__main__':
     webpage.save()  # save the HTML
 
     recon_img = np.concatenate(recon_img, axis = 0)
-    print(recon_img.shape)
+    #print(recon_img.shape)
     dataset.save_recon(recon_img)

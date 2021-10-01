@@ -29,7 +29,7 @@ from skimage.transform import resize
 class MyDataset(data.Dataset):
     """A template dataset class for you to implement custom datasets."""
 
-    def __init__(self, path, train = True, train_size = 0.5):
+    def __init__(self, opt, train_size = 0.5):
         """Initialize this dataset class.
 
         Parameters:
@@ -46,7 +46,9 @@ class MyDataset(data.Dataset):
         #self.image_paths = []  # You can call sorted(make_dataset(self.root, opt.max_dataset_size)) to get all the image paths under the directory self.root
         # define the default transform function. You can use <base_dataset.get_transform>; You can also define your custom transform function
         self.transform = transforms.Compose([transforms.ToTensor()])
-        self.path = path
+        self.path = opt.dataroot
+        self.train = opt.isTrain
+        print('training?:', self.train)
         #self.transform = transform
 
         #file = os.path.join(self.path)
@@ -58,7 +60,7 @@ class MyDataset(data.Dataset):
 
         idx = int(truth.shape[0] * train_size)
 
-        if train == True:
+        if self.train == True:
             self.truth = truth[:idx]
             self.fawkes = fawkes[:idx]
             print('add 10x noise')
@@ -67,8 +69,8 @@ class MyDataset(data.Dataset):
 
         else:
             #for test
-            self.truth = truth[:idx]
-            self.fawkes = fawkes[:idx]
+            self.truth = truth
+            self.fawkes = fawkes
             #print('add 5x noise')
             #noise = self.label - self.data
             #self.data = np.clip(self.data + noise*10, 0, 1) 
@@ -117,7 +119,7 @@ class MyDataset(data.Dataset):
         images = (images * 255 +0.5).astype(np.uint8)
         print(images.shape)
         #images.astype(np.uint8)
-        print(images)
+        #print(images)
         file = self.path[:-4]+ msg +'recon.npz'
         #print(reconre4567yyyu)
         #print('recon.shape:',recon.shape)
@@ -136,7 +138,7 @@ class MyDataLoader():
         """
         self.opt = opt
         #dataset_class = find_dataset_using_name(opt.dataset_mode)
-        self.dataset = MyDataset(opt.dataroot, train_size = train_size)
+        self.dataset = MyDataset(opt, train_size = train_size)
         print("dataset [%s] was created" % type(self.dataset).__name__)
         self.dataloader = data.DataLoader(
             self.dataset,
