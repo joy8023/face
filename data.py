@@ -111,28 +111,22 @@ class Fawkes(Dataset):
         #we are gonna to recover the image so the images are labels
         labels = self.dataset['images']
         data = self.dataset['fawkes']
-        
-        #print(data.shape)
+
         np.random.seed(666)
         perm = np.arange(len(data))
         np.random.shuffle(perm)
 
-
         if shuffle:
-
             self.data = data[perm]/255.0
             self.label = labels[perm]/225.0
         else:
             self.data = data/255.0
             self.label = labels/225.0
 
-
     #save original images with reconstructed images
-    def save_recon(self, recon, msg = '_'):
+    def save_recon(self, recon_img, recon_fawkes, msg = '_'):
         file = self.path[:-4]+'/'+ msg +'.npz'
-        #print(reconre4567yyyu)
-        #print('recon.shape:',recon.shape)
-        np.savez(file, images = self.dataset['images'], fawkes = recon, labels = self.dataset['labels'])
+        np.savez(file, images = recon_img, fawkes = recon_fawkes, labels = self.dataset['labels'])
         print('saved as {}'.format(file))
 
     def __len__(self):

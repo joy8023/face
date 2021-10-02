@@ -27,17 +27,28 @@ class Feature(object):
     #load feature dataset
     def __init__(self, args, test_size = 0.3):
         super(Feature, self).__init__()
-        self.datapath = args.datapath
+
+        if args.lowkey == 1:
+            self.dir = 'faces/lowkey' 
+        else:
+            self.dir = 'faces/fawkes'
+
+        #base dataset
+        self.base = self.dir + '.npz'
+        self.datapath = os.path.join(self.dir, args.datapath)
+        print('load eval data at: ', self.datapath)
+
 
         if args.feature == 0:
-            self.images, self.fawkes, self.labels = get_feature(self.datapath, denoise = args.denoise)
+            self.images, self.fawkes, self.labels, self.origin = get_feature(self.base, self.datapath, denoise = args.denoise)
         else:
-            self.images, self.fawkes, self.labels = get_feature_resnet(self.datapath)
+            self.images, self.fawkes, self.labels, self.origin = get_feature_resnet(self.base, self.datapath)
 
         #partition the dataset into training and testing for each label with same test size
-        image_train = np.copy(self.images)
+        image_train = np.copy(self.image)
         label_train = np.copy(self.labels)
         fawkes_train = np.copy(self.fawkes)
+        origin = np.copy(origin)
 
         #for each class
         label_test = []
@@ -49,16 +60,18 @@ class Feature(object):
 
             test_idx = random.sample(range(idx[0],idx[-1]+1), int(test_size * idx.shape[0]))
             
-            image_test.append(image_train[test_idx])
+            #test images are orignal, no fawkes and no recon
+            image_test.append(origin[test_idx])
             label_test.append(label_train[test_idx])
 
             image_train = np.delete(image_train, test_idx, axis = 0)
             label_train = np.delete(label_train, test_idx, axis = 0)
             fawkes_train = np.delete(fawkes_train, test_idx, axis = 0)
-
+            origin = np.delete(origin, test_idx, axis = 0)
         
         self.label_test = np.concatenate(label_test, axis = 0)
         self.image_test = np.concatenate(image_test, axis = 0)   
+        
         print(self.image_test.shape)
 
         self.image_train = image_train
@@ -158,12 +171,15 @@ def main(*argv):
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--datapath', '-d', type=str,
-                        help='the path of feature set', default='faces/fawkes.npz')
+                        help='the file name for test data', default='fawkes.npz')
     parser.add_argument('--mode', '-m', type=int,
                         help='0 for nn, 1 for linear', default = 0)
     parser.add_argument('--denoise', '-de', type= bool, default = False)
     parser.add_argument('--feature', '-f', type=int,
                         help ='feature extractor, 0 for fawkes, 1 for lowkey', default = 0)
+    parser.add_argument('--lowkey', '-l', type=int,
+                        help ='test data, 0 for fawkes, 1 for lowkey', default = 0)
+
     args = parser.parse_args(argv[1:])
 
     dataset = Feature(args)

@@ -53,10 +53,14 @@ def recon(data_loader, model, msg):
     model.eval()  # eval mode (no dropout or batchnorm)
 
     batch_time = ExpoAverageMeter()  # forward prop. + back prop. time
-    cloak_loss = 0
-    recover_loss = 0
+    cloak_loss = 0 #fawkes and images
+    recover_loss = 0 #fawkes recon and images
+    clean_loss = 0  #image recon and images
     losses = ExpoAverageMeter()  # loss (per word decoded)
+    
     recon_img = []
+    recon_fawkes = []
+
 
     start = time.time()
     plot = True
@@ -70,11 +74,13 @@ def recon(data_loader, model, msg):
             y = y.to(device, dtype=torch.float)
 
             recon = model(x)
+            images = model(y)
 
             loss = torch.sqrt((recon - y).pow(2).mean())
+            
             recover_loss += F.mse_loss(recon, y, reduction='sum').item()
-
             cloak_loss += F.mse_loss(x, y, reduction='sum').item()
+            clean_loss += F.mse_loss(images, y, reduction='sum').item()
 
             # Keep track of metrics
             losses.update(loss.item())
@@ -89,15 +95,16 @@ def recon(data_loader, model, msg):
                       'Loss {loss.val:.4f} ({loss.avg:.4f})\t'.format(i_batch, len(data_loader),
                                                                       batch_time=batch_time,
                                                                      loss=losses))
-            recon_img.append(to_image(recon))
+            recon_img.append(to_image(images))
+            recon_fawkes.append(to_image(recon))
 
             if plot:
                 s = 48
                 e = s+16
                 fawkes = x[s:e]
                 recon = recon[s:e]
-                fawkes_diff = torch.abs((fawkes - y[s:e])*5).clamp_(0,1)
-                recon_diff = torch.abs((recon - y[s:e])*5).clamp_(0,1)
+                fawkes_diff = torch.abs((fawkes - y[s:e])*3).clamp_(0,1)
+                recon_diff = torch.abs((recon - y[s:e])*3).clamp_(0,1)
                 out = torch.cat((fawkes, recon, fawkes_diff, recon_diff))
 
                 for i in range(2):
@@ -109,16 +116,16 @@ def recon(data_loader, model, msg):
                 vutils.save_image(out, 'out/recon{}.png'.format(msg.replace(" ", "")), normalize=False)
                 plot = False
 
-            
-
     recon_img = np.concatenate(recon_img, axis = 0)
+    recon_fawkes = np.concatenate(recon_fawkes, axis = 0)
     print(recon_img.shape)
 
     recover_loss /= len(data_loader.dataset) * imsize * imsize
     cloak_loss /= len(data_loader.dataset) * imsize * imsize
-    print('\n Average MSE loss: recover: {:.6f}, cloak: {:.6f},\n'.format(recover_loss,cloak_loss))
+    clean_loss /= len(data_loader.dataset) * imsize * imsize
+    print('\n Average MSE loss: recover: {:.6f}, cloak: {:.6f}, clean: {:.6f},\n'.format(recover_loss,cloak_loss,clean_loss))
 
-    return recon_img
+    return recon_img, recon_fawkes
 
 
 def main(*argv):
@@ -151,8 +158,8 @@ def main(*argv):
     # Use appropriate device
     #msg = '_'
     model = model.to(device)
-    recon_img = recon(data_loader, model, args.msg)
-    data_set.save_recon(recon_img, args.msg)
+    recon_img, recon_fawkes = recon(data_loader, model, args.msg)
+    data_set.save_recon(recon_img, recon_fawkes, args.msg)
 
 
 if __name__ == '__main__':

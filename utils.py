@@ -66,10 +66,11 @@ def add_mask(images,fawkes):
 
 #get feature of images after denoising directly
 #input fawkes.npz
-def get_feature(datapath, model_name = 'extractor_0', denoise = False):
+def get_feature(basepath, datapath, model_name = 'extractor_0', denoise = False):
     
     model = load_extractor(model_name)
     images, fawkes, labels = load_data(datapath)
+    base,_,_ = load_data(basepath)
 
     #fawkes = add_mask(images,fawkes)
     #fawkes = images
@@ -82,8 +83,9 @@ def get_feature(datapath, model_name = 'extractor_0', denoise = False):
         np.savez(datapath[:-4]+'_tv.npz', images = images, fawkes = fawkes, labels = labels)
     image_features = model.predict(images)
     fawkes_features = model.predict(fawkes)
+    base_features = model.predict(base)
     print('successfully load features')
-    return np.array(image_features), np.array(fawkes_features), labels
+    return np.array(image_features), np.array(fawkes_features), labels, np.array(base_features)
 
 
 
