@@ -8,9 +8,9 @@ from torchvision import transforms
 import torchvision.utils as vutils
 
 from model import SegNet, REDNet20, REDNet30
-from data import FaceScrub, Celeb, Fawkes_train
+from data import *
 import os, shutil, sys
-from fawkes.resnet import load_resnet
+from resnet import load_resnet
 
 input_nbr = 3
 imsize = 112
@@ -59,7 +59,7 @@ def save_checkpoint(epoch, model, optimizer, val_loss, is_best):
     #torch.save(model.state_dict(), '{0}/train_{1}_{2:.3f}.pth'.format(save_folder, epoch, val_loss ))
     # If this checkpoint is the best so far, store a copy so it doesn't get overwritten by a worse checkpoint
     if is_best:
-        torch.save(model.state_dict(), '{0}/best_rn30_10x_f.pth'.format(save_folder))
+        torch.save(model.state_dict(), '{0}/best_rn30_mask.pth'.format(save_folder))
 
 
 def train(epoch, train_loader, model, optimizer):
@@ -67,14 +67,15 @@ def train(epoch, train_loader, model, optimizer):
     model.train()
     # Loss function
     # criterion = nn.MSELoss().to(device)
-
+    msg = 'train'
     batch_time = ExpoAverageMeter()  # forward prop. + back prop. time
     losses = ExpoAverageMeter()  # loss (per word decoded)
 
     start = time.time()
-
+    plot = True
     # Batches
     for i_batch, (x, y) in enumerate(train_loader):
+    
         # Set device options
         x = x.to(device, dtype=torch.float)
         y = y.to(device, dtype=torch.float)
@@ -96,6 +97,16 @@ def train(epoch, train_loader, model, optimizer):
         batch_time.update(time.time() - start)
 
         start = time.time()
+
+        if plot:
+            truth = y[0:32]
+            inverse = y_hat[0:32]
+            out = torch.cat((inverse, truth))
+            for i in range(4):
+                out[i * 16:i * 16 + 8] = inverse[i * 8:i * 8 + 8]
+                out[i * 16 + 8:i * 16 + 16] = truth[i * 8:i * 8 + 8]
+            vutils.save_image(out, 'out/recon_{}_{}.png'.format(msg.replace(" ", ""), epoch), normalize=False)
+            plot = False
 
         # Print status
         if i_batch % print_freq == 0:
@@ -216,7 +227,7 @@ def valid(val_loader, model, epoch):
     start = time.time()
     plot = True
     ensure_folder('out')
-    msg = 'rn30_5x_f'
+    msg = 'rn30'
 
     with torch.no_grad():
         # Batches
@@ -308,9 +319,12 @@ def main():
     #train_set = Celeb('./data/celeba_3w.npy', transform = transform)
     #train_set = Celeb('./data/celeba_1w.npy', transform = transform)
     #test_set = Celeb('./data/celeba_1w.npy', transform = transform, train = False)
+    train_set = CelebMask('./data/celebwmask1w.npz', transform = transform)
+    test_set = CelebMask('./data/celebwmask1w.npz', transform = transform, train = False)
 
-    train_set = Fawkes_train('./fawkes/celeba_1w_fawkes.npz', transform = transform)
-    test_set = Fawkes_train('./fawkes/celeba_1w_fawkes.npz', transform = transform, train = False)
+    #train_set = Fawkes_train('./fawkes/celeba_1w_fawkes.npz', transform = transform)
+    #test_set = Fawkes_train('./fawkes/celeba_1w_fawkes.npz', transform = transform, train = False)
+
 
     train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True, pin_memory=True, drop_last=True)
     val_loader = DataLoader(test_set, batch_size=batch_size, shuffle=False, pin_memory=True, drop_last=True)
@@ -322,8 +336,8 @@ def main():
     # Use appropriate device
 
     #model = model.to(device)
-    model = SegNet(label_nbr).to(device)
-    optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
+    #model = SegNet(label_nbr).to(device)
+    #optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
     # optimizer = optim.LBFGS(model.parameters(), lr=0.8)
 
     #model and optimizer for rednet
@@ -350,12 +364,12 @@ def main():
 
         # One epoch's training
         print('training')
-        #train(epoch, train_loader, model, optimizer)
-        train2(resnet, epoch, train_loader, model, optimizer)
+        train(epoch, train_loader, model, optimizer)
+        #train2(resnet, epoch, train_loader, model, optimizer)
 
         # One epoch's validation
-        #val_loss = valid(val_loader, model, epoch)
-        val_loss = valid2(resnet, val_loader, model, epoch)
+        val_loss = valid(val_loader, model, epoch)
+        #val_loss = valid2(resnet, val_loader, model, epoch)
         print('\n * LOSS - {loss:.3f}\n'.format(loss=val_loss))
 
         # Check if there was an improvement

@@ -61,6 +61,7 @@ class Celeb(Dataset):
         self.transform = transform
 
         data = np.load(path)
+        #mask = np.load(path[:-4]+'_mask.npy')
 
         #print(data.shape)
         '''
@@ -69,10 +70,9 @@ class Celeb(Dataset):
         np.random.shuffle(perm)
         '''
         labels = data
-        #print(data.shape)
         idx = int(data.shape[0] * train_size)
-        #print(idx)
         if train:
+
             self.data = tv(data[:idx])
             self.labels = labels[:idx]/255.0
             #print(self.data)
@@ -126,6 +126,7 @@ class Fawkes(Dataset):
     #save original images with reconstructed images
     def save_recon(self, recon_img, recon_fawkes, msg = '_'):
         file = self.path[:-4]+'/'+ msg +'.npz'
+        #file = self.path[:-14]+'/'+ msg +'.npz'
         np.savez(file, images = recon_img, fawkes = recon_fawkes, labels = self.dataset['labels'])
         print('saved as {}'.format(file))
 
@@ -184,6 +185,49 @@ class Fawkes_train(Dataset):
     def __getitem__(self, index):
         #img, target = self.data[index], self.labels[index]
         img, target = self.data[index], self.label[index]
+        #img = Image.fromarray(img)
+
+        if self.transform is not None:
+            img = self.transform(img)
+            target = self.transform(target)
+
+        return img, target
+
+
+class CelebMask(Dataset):
+    def __init__(self, path, transform=None, train = True, train_size = 0.8):
+        self.root = os.path.expanduser(path)
+        self.transform = transform
+
+        data = np.load(path)
+
+        images = data['images']
+        mask = data['mask']
+
+        labels = images
+        idx = int(images.shape[0] * train_size)
+
+        mask_idx = np.where(mask>0)
+        images[mask_idx] = 255
+
+        if train:
+
+            self.data = images[:idx]
+            self.labels = labels[:idx]/255.0
+            #print(self.data)
+        else:
+            #for test
+            self.data = images[idx:]
+            self.labels = labels[idx:]/255.0
+            #print(self.data.shape)
+
+
+    def __len__(self):
+        return len(self.data)
+
+    def __getitem__(self, index):
+        img, target = self.data[index], self.labels[index]
+        #img, target = self.data[index], self.data[index]
         #img = Image.fromarray(img)
 
         if self.transform is not None:

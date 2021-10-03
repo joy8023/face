@@ -149,9 +149,9 @@ def main(*argv):
 
     path = args.model
     # Create SegNet model
-    label_nbr = 3
-    model = SegNet(label_nbr)
-    #model = REDNet30()
+    #label_nbr = 3
+    #model = SegNet(label_nbr)
+    model = REDNet30()
     model = load_model(model, path)
 
 

@@ -36,7 +36,7 @@ class Feature(object):
         #base dataset
         self.base = self.dir + '.npz'
         self.datapath = os.path.join(self.dir, args.datapath)
-        print('load eval data at: ', self.datapath)
+        print('=====loading eval data at:', self.datapath)
 
 
         if args.feature == 0:
@@ -45,10 +45,10 @@ class Feature(object):
             self.images, self.fawkes, self.labels, self.origin = get_feature_resnet(self.base, self.datapath)
 
         #partition the dataset into training and testing for each label with same test size
-        image_train = np.copy(self.image)
+        image_train = np.copy(self.images)
         label_train = np.copy(self.labels)
         fawkes_train = np.copy(self.fawkes)
-        origin = np.copy(origin)
+        origin = np.copy(self.origin)
 
         #for each class
         label_test = []

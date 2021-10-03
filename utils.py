@@ -53,10 +53,10 @@ def gen_mask(alpha = 0):
 
 def add_mask(images,fawkes):
     print('==========applying mask==========')
-    #maskset = np.load('faces/fawkes_mask.npz')
-    #img_mask = maskset['images']
-    #faw_mask = maskset['fawkes']
-    img_mask = gen_mask()
+    maskset = np.load('faces/fawkes_mask.npz')
+    img_mask = maskset['images']
+    faw_mask = maskset['fawkes']
+    #img_mask = gen_mask()
     idx = np.where(img_mask > 0)
     fawkes[idx] = images[idx]
     #fawkes = images
