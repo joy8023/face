@@ -100,19 +100,23 @@ def recon(data_loader, model, msg):
 
             if plot:
                 s = 48
-                e = s+16
+                e = s+8
                 fawkes = x[s:e]
                 recon = recon[s:e]
-                fawkes_diff = torch.abs((fawkes - y[s:e])*3).clamp_(0,1)
-                recon_diff = torch.abs((recon - y[s:e])*3).clamp_(0,1)
-                out = torch.cat((fawkes, recon, fawkes_diff, recon_diff))
+                clean = images[s:e]
+                fawkes_diff = torch.abs((fawkes - y[s:e])).clamp_(0,1)
+                recon_diff = torch.abs((recon - y[s:e])).clamp_(0,1)
+                clean_diff = torch.abs((clean - y[s:e])).clamp_(0,1)
 
+                out = torch.cat((y[s:e], fawkes, recon, clean, y[s:e], fawkes_diff, recon_diff, clean_diff))
+                #out = torch.cat((fawkes, recon, fawkes_diff, recon_diff))
+                '''
                 for i in range(2):
                     out[i * 32:i * 32 + 8] = fawkes[i * 8:i * 8 + 8]
                     out[i * 32 + 8:i * 32 + 16] = recon[i * 8:i * 8 + 8]
                     out[i * 32 + 16:i * 32 + 24] = fawkes_diff[i * 8:i * 8 + 8]
                     out[i * 32 + 24:i * 32 + 32] = recon_diff[i * 8:i * 8 + 8]
-
+                '''
                 vutils.save_image(out, 'out/recon{}.png'.format(msg.replace(" ", "")), normalize=False)
                 plot = False
 

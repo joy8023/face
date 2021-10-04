@@ -134,9 +134,7 @@ class Fawkes(Dataset):
         return len(self.data)
 
     def __getitem__(self, index):
-        #img, target = self.data[index], self.labels[index]
         img, target = self.data[index], self.label[index]
-        #img = Image.fromarray(img)
 
         if self.transform is not None:
             img = self.transform(img)
@@ -203,32 +201,29 @@ class CelebMask(Dataset):
 
         images = data['images']
         mask = data['mask']
-
-        labels = images
+        #images[:,:,:,[2,0]] = images[:,:,:,[0,2]]
+        #np.savez(path, images = images, mask = mask)
+        labels = np.copy(images)
         idx = int(images.shape[0] * train_size)
 
         mask_idx = np.where(mask>0)
         images[mask_idx] = 255
 
         if train:
-
-            self.data = images[:idx]
+            self.data = images[:idx]/255.0
             self.labels = labels[:idx]/255.0
-            #print(self.data)
+
         else:
             #for test
-            self.data = images[idx:]
+            self.data = images[idx:]/255.0
             self.labels = labels[idx:]/255.0
-            #print(self.data.shape)
-
+            #print(labels[0])
 
     def __len__(self):
         return len(self.data)
 
     def __getitem__(self, index):
         img, target = self.data[index], self.labels[index]
-        #img, target = self.data[index], self.data[index]
-        #img = Image.fromarray(img)
 
         if self.transform is not None:
             img = self.transform(img)
