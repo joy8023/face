@@ -37,7 +37,7 @@ from tensorflow.keras.layers import Dense, Activation
 from tensorflow.keras.models import Model
 from tensorflow.keras.preprocessing import image
 
-from align_face import align
+#from align_face import align
 from six.moves.urllib.request import urlopen
 
 if sys.version_info[0] == 2:
@@ -263,12 +263,14 @@ def dump_dictionary_as_json(dict, outfile):
 def load_victim_model(number_classes, teacher_model=None, end2end=False):
     for l in teacher_model.layers:
         l.trainable = end2end
-    x = teacher_model.layers[-1].output
+    #x = teacher_model.layers[-1].output
+    #print(teacher_model.layers)
+    x= teacher_model(teacher_model.input)
 
     x = Dense(number_classes)(x)
-    x = Activation('softmax', name="act")(x)
-    model = Model(teacher_model.input, x)
-    opt = tensorflow.keras.optimizers.Adadelta()
+    out = Activation('softmax', name="act")(x)
+    model = Model(teacher_model.input, out)
+    opt = tf.keras.optimizers.Adadelta()
     model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
     return model
 
