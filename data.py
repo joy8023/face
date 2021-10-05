@@ -24,6 +24,27 @@ def tv(images, weight = 0.3):
     
     return np.array(data)
 
+
+
+class MySet(Dataset):
+    def __init__(self, data, label, transform=None):
+        self.data = data
+        self.label = label
+        self.transform = transform
+
+    def __len__(self):
+        return len(self.data)
+
+    def __getitem__(self, index):
+
+        data, label = self.data[index], self.label[index]
+
+        #if self.transform is not None:
+        data = self.transform(data)
+        label = self.transform(label)
+
+        return data, label
+
 class FaceScrub(Dataset):
     def __init__(self, path, transform=None):
         self.root = os.path.expanduser(path)
@@ -144,9 +165,9 @@ class Fawkes(Dataset):
 
 #fawkes dataset for training and validation
 #full path of dataset
-class Fawkes_train(Dataset):
-    def __init__(self, path, transform=None, train = True, train_size = 0.8, enhance = True):
-        #self.root = os.path.expanduser(path)
+class Fawkes_train():
+    def __init__(self, path, transform=None, train_size = 0.8, enhance = True):
+
         self.path = path
         self.transform = transform
 
@@ -154,42 +175,39 @@ class Fawkes_train(Dataset):
         dataset = np.load(file)
 
         #we are gonna to recover the image so the images are labels
-        labels = dataset['images']/255.0
-        data = dataset['fawkes']/255.0
+        labels = dataset['images']
+        data = dataset['fawkes']
 
 
         idx = int(data.shape[0] * train_size)
 
-        if train == True:
-            self.data = data[:idx]
-            self.label = labels[:idx]
-            print('add 5x noise')
-            noise = self.label - self.data
-            self.data = np.clip(self.data + noise * 10, 0, 1) 
+        train_data = data[:idx]
+        train_label = labels[:idx]
+            #print('add 5x noise')
+        for i in range(8):
+            print('add {}x noise'.format(i+1))
+            s = i * 1000
+            e = (i+1) * 1000
+            noise = train_label[s:e] - train_data[s:e]
+            train_data[s:e] = np.clip(train_data[s:e] + noise * (i+1), 0, 255)
 
-        else:
-            #for test
-            self.data = data[idx:]
-            self.label = labels[idx:]
-            print('add 5x noise')
-            noise = self.label - self.data
-            self.data = np.clip(self.data + noise*10, 0, 1) 
+        self.train_set = MySet(train_data/255.0 , train_label/255.0, self.transform)
+        #print(self.data.shape) 
 
+            #noise = self.label - self.data
+            #self.data = np.clip(self.data + noise * 10, 0, 1) 
+        #for test
+        print('test')
+        test_data = data[idx:]
+        test_label = labels[idx:]
+            #print('add 5x noise')
+            #noise = self.label - self.data
+            #self.data = np.clip(self.data + noise*10, 0, 1) 
+        self.test_set = MySet(test_data/255.0 , test_label/255.0, self.transform)
 
+    def get_set(self):
+        return self.train_set, self.test_set
 
-    def __len__(self):
-        return len(self.data)
-
-    def __getitem__(self, index):
-        #img, target = self.data[index], self.labels[index]
-        img, target = self.data[index], self.label[index]
-        #img = Image.fromarray(img)
-
-        if self.transform is not None:
-            img = self.transform(img)
-            target = self.transform(target)
-
-        return img, target
 
 
 class CelebMask(Dataset):
