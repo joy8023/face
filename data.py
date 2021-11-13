@@ -183,19 +183,23 @@ class Fawkes_train():
 
         train_data = data[:idx]
         train_label = labels[:idx]
-            #print('add 5x noise')
+        X = 8
+        print('add {}x noise'.format(X))
+
+        noise = train_label - train_data
+        train_data = np.clip(train_data + noise * X, 0, 255) 
+
+        '''
         for i in range(8):
             print('add {}x noise'.format(i+1))
             s = i * 1000
             e = (i+1) * 1000
             noise = train_label[s:e] - train_data[s:e]
             train_data[s:e] = np.clip(train_data[s:e] + noise * (i+1), 0, 255)
-
+        '''
         self.train_set = MySet(train_data/255.0 , train_label/255.0, self.transform)
         #print(self.data.shape) 
 
-            #noise = self.label - self.data
-            #self.data = np.clip(self.data + noise * 10, 0, 1) 
         #for test
         print('test')
         test_data = data[idx:]

@@ -59,7 +59,7 @@ def save_checkpoint(epoch, model, optimizer, val_loss, is_best):
     #torch.save(model.state_dict(), '{0}/train_{1}_{2:.3f}.pth'.format(save_folder, epoch, val_loss ))
     # If this checkpoint is the best so far, store a copy so it doesn't get overwritten by a worse checkpoint
     if is_best:
-        torch.save(model.state_dict(), '{0}/best_rn30_mix.pth'.format(save_folder))
+        torch.save(model.state_dict(), '{0}/rn30_8x.pth'.format(save_folder))
 
 
 def train(epoch, train_loader, model, optimizer):
@@ -328,11 +328,11 @@ def main():
     train_set, test_set = myset.get_set()
 
     train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True, pin_memory=True, drop_last=True)
-    print('1')
+    #print('1')
     val_loader = DataLoader(test_set, batch_size=batch_size, shuffle=False, pin_memory=True, drop_last=True)
-    print('2')
+    #print('2')
     # Create SegNet model
-    label_nbr = 3
+    #label_nbr = 3
     #model = SegNet(label_nbr)
     
     # Use appropriate device
@@ -344,9 +344,9 @@ def main():
 
     #model and optimizer for rednet
     #model = REDNet30().to(device)
-    print('3')
+    #print('3')
     optimizer = optim.Adam(model.parameters(), lr=lr)
-    print('4')
+    #print('4')
     #model and opt for inversion model
     #model = Inversion().to(device)
     #optimizer = optim.Adam(model.parameters(), lr=0.0002, betas=(0.5, 0.999), amsgrad=True)

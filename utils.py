@@ -85,6 +85,7 @@ def get_feature(basepath, datapath, model_name = 'extractor_0', denoise = False)
     fawkes_features = model.predict(fawkes)
     base_features = model.predict(base)
     print('successfully load features')
+    #np.savez(datapath[:-4]+'_feature.npz', images = image_features,fawkes = fawkes_features, labels = labels)
     return np.array(image_features), np.array(fawkes_features), labels, np.array(base_features)
 
 

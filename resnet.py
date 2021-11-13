@@ -253,23 +253,25 @@ def load_resnet(model_root, input_size = [112,112]):
     return feature_extractor_model, device
 
 
-def get_feature_resnet(datapath):
+def get_feature_resnet(basepath, datapath):
 
     model, device = load_resnet('model/Backbone_ResNet_152_Arcface_Epoch_65.pth')
     batch_size = 128
     #images, fawkes, labels = load_data(datapath)
-    
+    baseset = Fawkes(basepath)
     dataset = Fawkes(datapath)
-    loader = DataLoader(dataset, batch_size=batch_size, shuffle=False, pin_memory=True, drop_last=False)
+    loader1 = DataLoader(baseset, batch_size=batch_size, shuffle=False, pin_memory=True, drop_last=False)
+    loader2 = DataLoader(dataset, batch_size=batch_size, shuffle=False, pin_memory=True, drop_last=False)
     #print(images.shape)
     labels = dataset.get_label()
 
+    clean_features = []
     image_features = []
     fawkes_features = []
 
     model.eval()
     with torch.no_grad():
-        for batch, (images, fawkes) in enumerate(loader):
+        for batch, (images, fawkes) in enumerate(loader2):
             images = images.to(device, dtype=torch.float)
             fawkes = fawkes.to(device, dtype=torch.float)
 
@@ -278,11 +280,20 @@ def get_feature_resnet(datapath):
 
             image_features.append(image_f)
             fawkes_features.append(fawkes_f)
+        
+        for batch, (clean, _) in enumerate(loader1):
+            clean = clean.to(device, dtype=torch.float)
+
+            clean_f = model(clean).to('cpu').numpy()
+
+            clean_features.append(clean_f)
+
 
     image_features = np.concatenate(image_features, axis = 0)
     fawkes_features = np.concatenate(fawkes_features, axis = 0)
+    clean_features = np.concatenate(clean_features,axis = 0)
     
     print(image_features.shape)
 
-    return image_features, fawkes_features, labels
+    return image_features, fawkes_features, labels, clean_features
 

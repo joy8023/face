@@ -122,7 +122,7 @@ def main():
     test_user = 0
 
     #for user in range(num_classes):
-    for user in [0,4]:
+    for user in [0]:
         base_model = load_extractor('extractor_0')
         model = load_victim_model(num_classes, base_model.model, True )
         label_train,label_test = face.get_label()

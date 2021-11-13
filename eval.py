@@ -145,11 +145,11 @@ def recognition(feature, mode = 0):
         test_user += test_accu_user
 
         print("==============USER {}================".format(user))
-        print("Train accu (clean): {:.2f}".format(train_accu_clean))
-        print("Test accu (clean): {:.2f}".format(test_accu_clean))
-        print("Train acc (user cloaked): {:.2f}".format(train_accu_user))
-        print("Test acc (user cloaked): {:.2f}".format(test_accu_user))
-        print("Protection rate: {:.2f}".format(1 - test_accu_user))
+        print("Train accu (clean): {:.4f}".format(train_accu_clean))
+        print("Test accu (clean): {:.4f}".format(test_accu_clean))
+        print("Train acc (user cloaked): {:.4f}".format(train_accu_user))
+        print("Test acc (user cloaked): {:.4f}".format(test_accu_user))
+        print("Protection rate: {:.4f}".format(1 - test_accu_user))
 
     train_clean /= num_class
     test_clean /= num_class
@@ -158,11 +158,11 @@ def recognition(feature, mode = 0):
     test_user /= num_class
 
     print("==============SUMMARY================")
-    print("Train accu (clean): {:.2f}".format(train_clean))
-    print("Test accu (clean): {:.2f}".format(test_clean))
-    print("Train acc (user cloaked): {:.2f}".format(train_user))        
-    print("Test acc (user cloaked): {:.2f}".format(test_user))
-    print("Protection rate: {:.2f}".format(1 - test_user))
+    print("Train accu (clean): {:.4f}".format(train_clean))
+    print("Test accu (clean): {:.4f}".format(test_clean))
+    print("Train acc (user cloaked): {:.4f}".format(train_user))        
+    print("Test acc (user cloaked): {:.4f}".format(test_user))
+    print("Protection rate: {:.4f}".format(1 - test_user))
 
 
 def main(*argv):

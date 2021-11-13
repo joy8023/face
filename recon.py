@@ -38,6 +38,7 @@ class ExpoAverageMeter(object):
 def load_model(model, path):
     try:
         checkpoint = torch.load(path)
+        #print(checkpoint)
         model.load_state_dict(checkpoint)
         return model
     except:
@@ -139,9 +140,9 @@ def main(*argv):
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--model', '-m', type=str,
-                        help='the path of model', default='models/best_model_fawkes.pth')
+                        help='the path of model', default='models/best_rn30_5x_f.pth')
     parser.add_argument('--data', '-d', type=str,
-                        help='the path of data set', default= 'faces/fawkes.npz')
+                        help='the path of data set', default= 'faces/lowkey.npz')
     parser.add_argument('--msg', '-msg', type=str,
                         help='msg for saving files', default='_')
     args = parser.parse_args(argv[1:])

@@ -31,6 +31,6 @@ def load_data(path1, path2):
     vutils.save_image(out, 'faces/recon/{}.png'.format(msg.replace(" ", "")), normalize=False)
 
 path1 = 'faces/fawkes.npz'
-path2 = 'faces/fawkes/rn30_5x.npz'
+path2 = 'faces/fawkes/rn305xf.npz'
 msg = '5x'
 load_data(path1,path2)
